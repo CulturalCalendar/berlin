@@ -47,6 +47,23 @@
   select, input[type="text"], input[type="date"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'DM Mono', monospace; font-size: 11px; padding: 5px 9px; border-radius: 3px; outline: none; cursor: pointer; transition: border-color 0.15s; }
   select:hover, input:hover, select:focus, input:focus { border-color: var(--accent); }
   select { padding-right: 26px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+  /* Tag group colors — border tints by category */
+  .tag-filter-btn.tg-nightlife  { border-color: #7c3aed; }   /* purple  — Techno, Party, Festival, Drag, Comedy */
+  .tag-filter-btn.tg-performing { border-color: #0e7490; }   /* teal    — Theater, Dance, Opera, Concert */
+  .tag-filter-btn.tg-visual     { border-color: #b45309; }   /* amber   — Exhibition, Photography, Painting, Art, Vernissage */
+  .tag-filter-btn.tg-words      { border-color: #166534; }   /* green   — Literature, Poetry, Book Club, Talk */
+  .tag-filter-btn.tg-screen     { border-color: #9f1239; }   /* rose    — Film, Cinema */
+  .tag-filter-btn.tg-community  { border-color: #be185d; }   /* pink    — Queer, Sexuality */
+  .tag-filter-btn.tg-other      { border-color: #374151; }   /* grey    — Workshop, Market, Guided Tour, Food */
+
+  .tag-filter-btn.tg-nightlife.active  { background: rgba(124,58,237,0.18); border-color: #a78bfa; color: #a78bfa; }
+  .tag-filter-btn.tg-performing.active { background: rgba(14,116,144,0.18); border-color: #22d3ee; color: #22d3ee; }
+  .tag-filter-btn.tg-visual.active     { background: rgba(180,83,9,0.18);   border-color: #fbbf24; color: #fbbf24; }
+  .tag-filter-btn.tg-words.active      { background: rgba(22,101,52,0.18);  border-color: #4ade80; color: #4ade80; }
+  .tag-filter-btn.tg-screen.active     { background: rgba(159,18,57,0.18);  border-color: #fb7185; color: #fb7185; }
+  .tag-filter-btn.tg-community.active  { background: rgba(190,24,93,0.18);  border-color: #f472b6; color: #f472b6; }
+  .tag-filter-btn.tg-other.active      { background: rgba(55,65,81,0.25);   border-color: #9ca3af; color: #9ca3af; }
+
   .tag-filter-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
   .tag-filter-btn:hover { border-color: var(--accent); color: var(--text); }
   .tag-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 500; }
@@ -61,7 +78,9 @@
   .price-btn.active[data-price="unknown"] { background: #2a2a2a; border-color: #666; color: #aaa; }
 
   /* Tag strip */
-  #tag-strip { padding: 8px 20px; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  #tag-strip { padding: 8px 20px 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 0; }
+  .tag-strip-top { display: flex; align-items: center; gap: 5px; margin-bottom: 9px; }
+  .tag-strip-tags { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
   .tag-mode-wrap { display: flex; align-items: center; gap: 7px; margin-left: 6px; flex-shrink: 0; }
   .tag-mode-label { font-size: 10px; color: var(--muted2); font-family: 'DM Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; user-select: none; cursor: pointer; }
   .tag-mode-label.lit { color: var(--accent); }
@@ -227,14 +246,17 @@
 </div>
 
 <div id="tag-strip">
-  <span class="filter-label">Tags</span>
-  <div class="tag-mode-wrap">
-    <span class="tag-mode-label lit" id="tag-label-and">AND</span>
-    <div class="tag-toggle-track" id="tag-toggle-track" title="Switch between AND (all tags must match) and OR (any tag matches)">
-      <div class="tag-toggle-knob"></div>
+  <div class="tag-strip-top">
+    <span class="filter-label">Tags</span>
+    <div class="tag-mode-wrap">
+      <span class="tag-mode-label lit" id="tag-label-and">AND</span>
+      <div class="tag-toggle-track" id="tag-toggle-track" title="Switch between AND (all tags must match) and OR (any tag matches)">
+        <div class="tag-toggle-knob"></div>
+      </div>
+      <span class="tag-mode-label" id="tag-label-or">OR</span>
     </div>
-    <span class="tag-mode-label" id="tag-label-or">OR</span>
   </div>
+  <div class="tag-strip-tags" id="tag-strip-tags"></div>
 </div>
 
 <div id="status"><span class="spinner"></span> Loading calendar…</div>
@@ -431,10 +453,34 @@ function buildFilters() {
   Object.keys(nh).sort().forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;nhSel.appendChild(o);});
   var vSel=document.getElementById('venue-filter');
   Object.keys(v).sort().forEach(function(x){if(!x)return;var o=document.createElement('option');o.value=x;o.textContent=x;vSel.appendChild(o);});
-  var strip=document.getElementById('tag-strip');
-  var tagList=Object.keys(tags).filter(function(t){return t!=='Price Unknown'&&t!=='Free';}).sort(function(a,b){return tags[b]-tags[a];});
-  tagList.forEach(function(tag){
-    var btn=document.createElement('button'); btn.className='tag-filter-btn';
+  var TAG_GROUPS=[
+    {cls:'tg-nightlife',  tags:['Techno','Party','Festival','Drag','Comedy']},
+    {cls:'tg-performing', tags:['Concert','Theater','Dance','Opera']},
+    {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Vernissage']},
+    {cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
+    {cls:'tg-screen',     tags:['Film','Cinema']},
+    {cls:'tg-community',  tags:['Queer','Sexuality']},
+    {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food']},
+  ];
+  // Build lookup: tag → group class
+  var tagGroupMap={};
+  TAG_GROUPS.forEach(function(g){g.tags.forEach(function(t){tagGroupMap[t]=g.cls;});});
+
+  // Order tags: grouped first (in group order), then any unknowns
+  var grouped=[];
+  TAG_GROUPS.forEach(function(g){
+    g.tags.forEach(function(t){ if(tags[t]) grouped.push(t); });
+  });
+  var known=new Set(grouped);
+  Object.keys(tags).forEach(function(t){
+    if(!known.has(t)&&t!=='Price Unknown'&&t!=='Free') grouped.push(t);
+  });
+
+  var strip=document.getElementById('tag-strip-tags');
+  grouped.forEach(function(tag){
+    var btn=document.createElement('button');
+    var grpCls=tagGroupMap[tag]||'tg-other';
+    btn.className='tag-filter-btn '+grpCls;
     btn.textContent=tag+' ('+(tags[tag]||0)+')'; btn.dataset.tag=tag;
     btn.addEventListener('click',function(){
       if(activeTags.has(tag)){activeTags.delete(tag);btn.classList.remove('active');}

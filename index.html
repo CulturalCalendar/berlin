@@ -14,7 +14,7 @@
     --surface3: #222;
     --border: #272727;
     --border2: #333;
-    --accent: #c4b5fd;
+    --accent: #a78bfa;
     --accent2: #f5c842;
     --text: #e8e8e8;
     --muted: #777;
@@ -57,11 +57,30 @@
   .price-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
   .price-btn:hover { border-color: var(--accent); color: var(--text); }
   .price-btn.active[data-price="free"]    { background: #14532d; border-color: #4ade80; color: #4ade80; }
-  .price-btn.active[data-price="paid"]    { background: #1e1233; border-color: var(--accent); color: var(--accent); }
+  .price-btn.active[data-price="paid"]    { background: #1a1040; border-color: var(--accent); color: var(--accent); }
   .price-btn.active[data-price="unknown"] { background: #2a2a2a; border-color: #666; color: #aaa; }
 
   /* Tag strip */
   #tag-strip { padding: 8px 20px; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .tag-mode-wrap { display: flex; align-items: center; gap: 7px; margin-left: 6px; flex-shrink: 0; }
+  .tag-mode-label { font-size: 10px; color: var(--muted2); font-family: 'DM Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; user-select: none; cursor: pointer; }
+  .tag-mode-label.lit { color: var(--accent); }
+  /* The sliding pill track */
+  .tag-toggle-track {
+    position: relative; width: 44px; height: 20px;
+    background: var(--surface3); border: 1px solid var(--border2);
+    border-radius: 10px; cursor: pointer; flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .tag-toggle-track:hover { border-color: var(--accent); }
+  /* The sliding knob */
+  .tag-toggle-knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent); transition: transform 0.22s cubic-bezier(.4,0,.2,1), background 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .tag-toggle-track.or-mode .tag-toggle-knob { transform: translateX(24px); }
 
   /* Status */
   #status { padding: 60px 40px; text-align: center; color: var(--muted); font-size: 12px; }
@@ -82,7 +101,7 @@
   .cal-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-left: 1px solid var(--border); border-top: 1px solid var(--border); width: 100%; }
   .cal-day { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-height: 100px; padding: 4px; position: relative; overflow: hidden; min-width: 0; }
   .cal-day.other-month { background: #0a0a0a; }
-  .cal-day.today { background: #16122a; }
+  .cal-day.today { background: #13102a; }
   .cal-day-num { font-size: 10px; color: var(--muted); width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 3px; }
   .cal-day.today .cal-day-num { background: var(--accent); color: #000; font-weight: 500; }
   .cal-event-pill { display: block; width: 100%; font-size: 10px; line-height: 1.3; padding: 2px 5px; margin-bottom: 2px; border-radius: 2px; background: var(--surface2); border: none; border-left: 2px solid var(--border2); color: var(--text); cursor: pointer; transition: background 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; font-family: 'DM Mono', monospace; }
@@ -122,6 +141,8 @@
   #modal-date { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
   #modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.25; margin-bottom: 14px; }
   #modal-meta { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.9; }
+  .meta-link { color: var(--accent); text-decoration: none; }
+  .meta-link:hover { text-decoration: underline; }
   #modal-meta strong { color: var(--text); }
   #modal-summary { font-size: 13px; line-height: 1.7; color: #ccc; margin-bottom: 14px; }
   #modal-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; }
@@ -207,6 +228,13 @@
 
 <div id="tag-strip">
   <span class="filter-label">Tags</span>
+  <div class="tag-mode-wrap">
+    <span class="tag-mode-label lit" id="tag-label-and">AND</span>
+    <div class="tag-toggle-track" id="tag-toggle-track" title="Switch between AND (all tags must match) and OR (any tag matches)">
+      <div class="tag-toggle-knob"></div>
+    </div>
+    <span class="tag-mode-label" id="tag-label-or">OR</span>
+  </div>
 </div>
 
 <div id="status"><span class="spinner"></span> Loading calendar…</div>
@@ -265,6 +293,7 @@ var allEvents = [], filteredEvents = [];
 var activeTags = new Set();
 var searchQuery = "", filterNeighborhood = "", filterVenue = "", filterSource = "", filterFrom = "", filterTo = "";
 var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
+var tagMode = 'and'; // 'and' | 'or'
 var currentView = "cal";
 var today = new Date();
 var calYear = today.getFullYear(), calMonth = today.getMonth();
@@ -312,11 +341,42 @@ function parseDesc(desc) {
     if (l.startsWith('Tags:')) out.tags=l.replace('Tags:','').trim().split(',').map(function(x){return x.trim();}).filter(Boolean);
     if (l.startsWith('Source:')) out.source=l.replace('Source:','').trim();
     if (l.startsWith('Event:')) out.eventUrl=l.replace('Event:','').trim();
+    if (l.startsWith('Official:')) out.officialUrl=l.replace('Official:','').trim();
     if (l.startsWith('http')&&!out.sourceUrl) out.sourceUrl=l.trim();
   }
   return out;
 }
 
+
+function normalizeSourceLabel(raw) {
+  if (!raw) return '';
+  // Strip suffixes like _A, _B, _C, _D, _1, _2 etc.
+  var s = raw.replace(/_[A-D]$/, '').replace(/_\d+$/, '');
+  // Map internal names to display labels
+  var MAP = {
+    'Siegessaeule':           'Siegessäule',
+    'TheBerliner':            'The Berliner',
+    'TheBerliner_Monthly':    'The Berliner',
+    'TheBerliner_Exhibitions':'The Berliner',
+    'TheBerliner_Weekend':    'The Berliner',
+    'IndexBerlin':            'Index Berlin',
+    'IndexBerlin_Exhibitions':'Index Berlin',
+    'IndexBerlin_Events':     'Index Berlin',
+    'BerlinEventsWeekly':     'Berlin Events Weekly',
+    'JuliaSchneider':         'Julia Schneider',
+    'TheNextDay':             'The Next Day',
+    'RA_Berlin':              'Resident Advisor',
+    'TipBerlin':              'Tip Berlin',
+    'WeAreVillage':           'We Are Village',
+    'SchinkelPavillon':       'Schinkelpavillon',
+    'Berghain':               'Berghain',
+    'Volksbuehne':            'Volksbühne',
+    'Gorki':                  'Maxim Gorki Theater',
+    'Fotografiska':           'Fotografiska',
+    'CeeCee':                 'CeeCee',
+  };
+  return MAP[s] || MAP[raw] || raw;
+}
 function loadCalendar() {
   var now=new Date(), fut=new Date(now); fut.setMonth(fut.getMonth()+9);
   var url="https://www.googleapis.com/calendar/v3/calendars/"+encodeURIComponent(CALENDAR_ID)+
@@ -347,7 +407,7 @@ function loadCalendar() {
         fullLocation:item.location||'',
         neighborhood:p.location?p.location.split(',').pop().trim():'',
         price:p.price||'', tags:p.tags||[], summary:summary,
-        source:p.source||'', sourceUrl:p.sourceUrl||'', eventUrl:p.eventUrl||'',
+        source:normalizeSourceLabel(p.source||''), sourceUrl:p.sourceUrl||'', eventUrl:p.eventUrl||'', officialUrl:p.officialUrl||'',
         rawDescription:item.description||''
       };
     }).filter(function(e){return e.startDate;});
@@ -363,7 +423,7 @@ function loadCalendar() {
 function buildFilters() {
   var nh={},v={},tags={};
   allEvents.forEach(function(e){
-    if(e.neighborhood) nh[e.neighborhood]=true;
+    if(e.neighborhood&&e.neighborhood!=='Berlin') nh[e.neighborhood]=true;
     if(e.venue) v[e.venue]=true;
     (e.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});
   });
@@ -394,6 +454,25 @@ function buildFilters() {
     var o=document.createElement('option'); o.value=s; o.textContent=s; sSel.appendChild(o);
   });
 
+  // Wire tag mode sliding toggle
+  var track = document.getElementById('tag-toggle-track');
+  function setTagMode(mode) {
+    tagMode = mode;
+    if (mode === 'or') {
+      track.classList.add('or-mode');
+      document.getElementById('tag-label-and').classList.remove('lit');
+      document.getElementById('tag-label-or').classList.add('lit');
+    } else {
+      track.classList.remove('or-mode');
+      document.getElementById('tag-label-and').classList.add('lit');
+      document.getElementById('tag-label-or').classList.remove('lit');
+    }
+    applyFilters();
+  }
+  track.addEventListener('click', function() { setTagMode(tagMode === 'and' ? 'or' : 'and'); });
+  document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); });
+  document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  });
+
   // Wire price buttons
   document.querySelectorAll('.price-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -402,6 +481,9 @@ function buildFilters() {
       else {
         filterPrice=p;
         document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
+  tagMode='and';
+  document.getElementById('tag-mode-and').classList.add('active');
+  document.getElementById('tag-mode-or').classList.remove('active');
         btn.classList.add('active');
       }
       applyFilters();
@@ -424,7 +506,14 @@ function applyFilters() {
     }
     if(filterFrom&&e.endDate<filterFrom) return false;
     if(filterTo&&e.startDate>filterTo) return false;
-    if(activeTags.size>0){var h=true;activeTags.forEach(function(t){if((e.tags||[]).indexOf(t)===-1)h=false;});if(!h)return false;}
+    if(activeTags.size>0){
+      var et=e.tags||[];
+      if(tagMode==='and'){
+        var h=true;activeTags.forEach(function(t){if(et.indexOf(t)===-1)h=false;});if(!h)return false;
+      } else {
+        var any=false;activeTags.forEach(function(t){if(et.indexOf(t)!==-1)any=true;});if(!any)return false;
+      }
+    }
     return true;
   });
   document.getElementById('event-count').textContent=filteredEvents.length;
@@ -519,15 +608,19 @@ function openModal(e) {
   document.getElementById('modal-date').textContent=fmtDateRange(e.startDate,e.endDate)+(e.startTime?' · '+e.startTime:'');
   document.getElementById('modal-title').textContent=e.title;
   var meta='';
-  if(e.fullLocation) meta+='<strong>Where</strong> '+esc(e.fullLocation)+'<br>';
+  if(e.fullLocation){
+    var mapsUrl='https://www.google.com/maps/search/'+encodeURIComponent(e.fullLocation);
+    meta+='<strong>Where</strong> <a href="'+mapsUrl+'" target="_blank" rel="noopener" class="meta-link">'+esc(e.fullLocation)+' ↗</a><br>';
+  }
   if(e.price) meta+='<strong>Price</strong> '+esc(e.price)+'<br>';
   if(e.source) meta+='<strong>Source</strong> '+esc(e.source);
   document.getElementById('modal-meta').innerHTML=meta;
   document.getElementById('modal-summary').textContent=e.summary;
   document.getElementById('modal-tags').innerHTML=(e.tags||[]).map(function(t){return '<span class="'+tagClass(t)+'">'+esc(t)+'</span>';}).join('');
   var links='';
-  if(e.eventUrl) links+='<a href="'+esc(e.eventUrl)+'" target="_blank" rel="noopener">Event page ↗</a>';
-  if(e.sourceUrl&&e.sourceUrl!==e.eventUrl) links+='<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Source ↗</a>';
+  if(e.officialUrl) links+='<a href="'+esc(e.officialUrl)+'" target="_blank" rel="noopener">Official page ↗</a>';
+  if(e.eventUrl&&e.eventUrl!==e.officialUrl) links+='<a href="'+esc(e.eventUrl)+'" target="_blank" rel="noopener">Event listing ↗</a>';
+  if(e.sourceUrl&&e.sourceUrl!==e.eventUrl&&e.sourceUrl!==e.officialUrl) links+='<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Source ↗</a>';
   document.getElementById('modal-links').innerHTML=links;
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -573,6 +666,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   filterPrice='';
   document.getElementById('source-filter').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
+  tagMode='and'; setTagMode('and');
   filterFrom=new Date().toISOString().substring(0,10);
   applyFilters();
 });

@@ -47,22 +47,25 @@
   select, input[type="text"], input[type="date"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'DM Mono', monospace; font-size: 11px; padding: 5px 9px; border-radius: 3px; outline: none; cursor: pointer; transition: border-color 0.15s; }
   select:hover, input:hover, select:focus, input:focus { border-color: var(--accent); }
   select { padding-right: 26px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
-  /* Tag group colors — border tints by category */
-  .tag-filter-btn.tg-nightlife  { border-color: #7c3aed; }   /* purple  — Techno, Party, Festival, Drag, Comedy */
-  .tag-filter-btn.tg-performing { border-color: #0e7490; }   /* teal    — Theater, Dance, Opera, Concert */
-  .tag-filter-btn.tg-visual     { border-color: #b45309; }   /* amber   — Exhibition, Photography, Painting, Art, Vernissage */
-  .tag-filter-btn.tg-words      { border-color: #166534; }   /* green   — Literature, Poetry, Book Club, Talk */
-  .tag-filter-btn.tg-screen     { border-color: #9f1239; }   /* rose    — Film, Cinema */
-  .tag-filter-btn.tg-community  { border-color: #be185d; }   /* pink    — Queer, Sexuality */
-  .tag-filter-btn.tg-other      { border-color: #374151; }   /* grey    — Workshop, Market, Guided Tour, Food */
+  /* Tag group colors — Magma (viridis option D) palette */
+  /* Reading warm→cool through the magma sequence:                         */
+  /*   community: #c5447d  screen: #822681  performing: #50117b           */
+  /*   nightlife: #e0603e  visual: #f8a524  words: #f9d162  other: #444   */
+  .tag-filter-btn.tg-community  { border-color: #9e3069; }
+  .tag-filter-btn.tg-screen     { border-color: #6b1f72; }
+  .tag-filter-btn.tg-performing { border-color: #3d0f6b; }
+  .tag-filter-btn.tg-nightlife  { border-color: #c94e2a; }
+  .tag-filter-btn.tg-visual     { border-color: #c98512; }
+  .tag-filter-btn.tg-words      { border-color: #b09120; }
+  .tag-filter-btn.tg-other      { border-color: #3a3a3e; }
 
-  .tag-filter-btn.tg-nightlife.active  { background: rgba(124,58,237,0.18); border-color: #a78bfa; color: #a78bfa; }
-  .tag-filter-btn.tg-performing.active { background: rgba(14,116,144,0.18); border-color: #22d3ee; color: #22d3ee; }
-  .tag-filter-btn.tg-visual.active     { background: rgba(180,83,9,0.18);   border-color: #fbbf24; color: #fbbf24; }
-  .tag-filter-btn.tg-words.active      { background: rgba(22,101,52,0.18);  border-color: #4ade80; color: #4ade80; }
-  .tag-filter-btn.tg-screen.active     { background: rgba(159,18,57,0.18);  border-color: #fb7185; color: #fb7185; }
-  .tag-filter-btn.tg-community.active  { background: rgba(190,24,93,0.18);  border-color: #f472b6; color: #f472b6; }
-  .tag-filter-btn.tg-other.active      { background: rgba(55,65,81,0.25);   border-color: #9ca3af; color: #9ca3af; }
+  .tag-filter-btn.tg-community.active  { background: rgba(197,68,125,0.15);  border-color: #c5447d; color: #c5447d; }
+  .tag-filter-btn.tg-screen.active     { background: rgba(130,38,129,0.18);  border-color: #a233a1; color: #a233a1; }
+  .tag-filter-btn.tg-performing.active { background: rgba(80,17,123,0.22);   border-color: #7b35c4; color: #9b6ee0; }
+  .tag-filter-btn.tg-nightlife.active  { background: rgba(224,96,62,0.15);   border-color: #e0603e; color: #e0603e; }
+  .tag-filter-btn.tg-visual.active     { background: rgba(248,165,36,0.12);  border-color: #f8a524; color: #f8a524; }
+  .tag-filter-btn.tg-words.active      { background: rgba(249,209,98,0.10);  border-color: #f9d162; color: #f9d162; }
+  .tag-filter-btn.tg-other.active      { background: rgba(80,80,88,0.20);    border-color: #70707a; color: #70707a; }
 
   .tag-filter-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
   .tag-filter-btn:hover { border-color: var(--accent); color: var(--text); }
@@ -454,12 +457,12 @@ function buildFilters() {
   var vSel=document.getElementById('venue-filter');
   Object.keys(v).sort().forEach(function(x){if(!x)return;var o=document.createElement('option');o.value=x;o.textContent=x;vSel.appendChild(o);});
   var TAG_GROUPS=[
-    {cls:'tg-nightlife',  tags:['Techno','Party','Festival','Drag','Comedy']},
+    {cls:'tg-community',  tags:['Queer','Sexuality','Drag']},
+    {cls:'tg-nightlife',  tags:['Techno','Party','Festival','Comedy']},
     {cls:'tg-performing', tags:['Concert','Theater','Dance','Opera']},
     {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Vernissage']},
     {cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
     {cls:'tg-screen',     tags:['Film','Cinema']},
-    {cls:'tg-community',  tags:['Queer','Sexuality']},
     {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food']},
   ];
   // Build lookup: tag → group class

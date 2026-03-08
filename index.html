@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Berlin Cultural Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --accent: #c8f562;
+    --accent2: #f5c842;
+    --text: #e8e8e8;
+    --muted: #888;
+    --tag-bg: #1e1e1e;
+    --tag-border: #333;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 32px 40px 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .site-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 48px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .site-title em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .header-meta {
+    color: var(--muted);
+    font-size: 11px;
+    text-align: right;
+    line-height: 1.6;
+  }
+  #event-count { color: var(--accent); }
+
+  /* ── Filters ── */
+  #filters {
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .filter-label {
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .filter-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 6px;
+  }
+
+  select, input[type="text"], input[type="date"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  select:hover, input:hover, select:focus, input:focus {
+    border-color: var(--accent);
+  }
+  select { padding-right: 28px; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  .tag-filter-btn {
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .tag-filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tag-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 500; }
+
+  #search-input {
+    width: 200px;
+  }
+
+  #clear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  #clear-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ── Tag strip (collapsible) ── */
+  #tag-strip {
+    padding: 12px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* ── Loading / Status ── */
+  #status {
+    padding: 60px 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Event grid ── */
+  #events-grid {
+    padding: 24px 40px 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .event-card {
+    background: var(--surface);
+    padding: 20px;
+    cursor: pointer;
+    transition: background 0.12s;
+    position: relative;
+    overflow: hidden;
+  }
+  .event-card:hover { background: var(--surface2); }
+
+  .event-date {
+    font-size: 10px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .event-date.multi { color: var(--accent2); }
+
+  .event-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .event-venue {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .event-venue span { color: var(--text); }
+
+  .event-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    color: var(--muted);
+  }
+  .tag.free { border-color: #4ade80; color: #4ade80; }
+  .tag.price-unknown { border-color: #444; color: #555; }
+  .tag.queer { border-color: #c084fc; color: #c084fc; }
+  .tag.vernissage { border-color: var(--accent2); color: var(--accent2); }
+  .tag.festival { border-color: #f97316; color: #f97316; }
+
+  /* ── Modal ── */
+  #modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #modal-overlay.open { display: flex; }
+
+  #modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    max-width: 560px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 32px;
+    position: relative;
+    border-radius: 2px;
+  }
+
+  #modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none; border: none;
+    color: var(--muted); font-size: 20px;
+    cursor: pointer; line-height: 1;
+    font-family: 'DM Mono', monospace;
+  }
+  #modal-close:hover { color: var(--text); }
+
+  #modal-date { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  #modal-title { font-family: 'DM Serif Display', serif; font-size: 24px; line-height: 1.2; margin-bottom: 16px; }
+  #modal-meta { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.8; }
+  #modal-meta strong { color: var(--text); }
+  #modal-summary { font-size: 13px; line-height: 1.7; color: #ccc; margin-bottom: 16px; }
+  #modal-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+  #modal-links { display: flex; flex-wrap: wrap; gap: 8px; }
+  #modal-links a {
+    font-size: 11px;
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 2px;
+    transition: border-color 0.12s;
+  }
+  #modal-links a:hover { border-color: var(--accent); }
+
+  /* ── No results ── */
+  .no-results {
+    grid-column: 1/-1;
+    padding: 60px 0;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    header, #filters, #tag-strip, #events-grid { padding-left: 20px; padding-right: 20px; }
+    #events-grid { grid-template-columns: 1fr; }
+    #search-input { width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Berlin<br><em>Cultural</em> Calendar</div>
+  <div class="header-meta">
+    <span id="event-count">—</span> upcoming events<br>
+    Updated automatically from Google Calendar
+  </div>
+</header>
+
+<div id="filters">
+  <span class="filter-label">Filter</span>
+
+  <div class="filter-group">
+    <input type="text" id="search-input" placeholder="search titles…">
+  </div>
+
+  <div class="filter-divider"></div>
+
+  <div class="filter-group">
+    <span class="filter-label">from</span>
+    <input type="date" id="date-from">
+    <span class="filter-label">to</span>
+    <input type="date" id="date-to">
+  </div>
+
+  <div class="filter-divider"></div>
+
+  <div class="filter-group">
+    <select id="neighborhood-filter">
+      <option value="">All neighborhoods</option>
+    </select>
+    <select id="venue-filter">
+      <option value="">All venues</option>
+    </select>
+  </div>
+
+  <div class="filter-divider"></div>
+
+  <button id="clear-btn">Clear all</button>
+</div>
+
+<div id="tag-strip">
+  <span class="filter-label">Tags</span>
+  <!-- populated by JS -->
+</div>
+
+<div id="status"><span class="spinner"></span> Loading calendar…</div>
+<div id="events-grid" style="display:none"></div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <button id="modal-close">×</button>
+    <div id="modal-date"></div>
+    <div id="modal-title"></div>
+    <div id="modal-meta"></div>
+    <div id="modal-summary"></div>
+    <div id="modal-tags"></div>
+    <div id="modal-links"></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG — replace with your calendar ID ──────────────────
+var CALENDAR_ID = "c794825d58f6596385fa07a5d06fb9462bbe1dff7b33f92499aebdae52374119@group.calendar.google.com";
+var API_KEY     = "AIzaSyCY9zEbTaT7fU5tTU7wPQdOSuR5Lr-k9ho"; // get from Google Cloud Console
+// ────────────────────────────────────────────────────────────
+
+var allEvents       = [];
+var activeTags      = new Set();
+var searchQuery     = "";
+var filterNeighborhood = "";
+var filterVenue     = "";
+var filterFrom      = "";
+var filterTo        = "";
+
+// ── Date helpers ──────────────────────────────────────────────
+function fmtDateRange(start, end) {
+  var s = new Date(start), e = new Date(end);
+  var opts = { day: 'numeric', month: 'short' };
+  if (start === end) return s.toLocaleDateString('en-GB', opts);
+  if (s.getMonth() === e.getMonth())
+    return s.getDate() + '–' + e.toLocaleDateString('en-GB', opts);
+  return s.toLocaleDateString('en-GB', opts) + ' – ' + e.toLocaleDateString('en-GB', opts);
+}
+
+function isoDate(gcalDatetime) {
+  // Google Calendar gives either {date: "YYYY-MM-DD"} or {dateTime: "..."}
+  if (!gcalDatetime) return null;
+  return (gcalDatetime.date || gcalDatetime.dateTime || "").substring(0, 10);
+}
+
+// ── Parse calendar description field ─────────────────────────
+function parseDesc(desc) {
+  if (!desc) return {};
+  var out = {};
+  var lines = desc.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    var l = lines[i].trim();
+    if (l.startsWith('Location:'))  out.location  = l.replace('Location:', '').trim();
+    if (l.startsWith('Price:'))     out.price     = l.replace('Price:', '').trim();
+    if (l.startsWith('Tags:'))      out.tags      = l.replace('Tags:', '').trim().split(',').map(function(t){ return t.trim(); }).filter(Boolean);
+    if (l.startsWith('Source:'))    out.source    = l.replace('Source:', '').trim();
+    if (l.startsWith('http'))       out.sourceUrl = l.trim();
+  }
+  // Also look for eventUrl line
+  for (var j = 0; j < lines.length; j++) {
+    var line = lines[j].trim();
+    if (line.startsWith('Event:'))  out.eventUrl  = line.replace('Event:', '').trim();
+  }
+  return out;
+}
+
+// ── Fetch all events from Google Calendar API ─────────────────
+function loadCalendar() {
+  var now    = new Date();
+  var future = new Date(now);
+  future.setMonth(future.getMonth() + 6);
+
+  var url = "https://www.googleapis.com/calendar/v3/calendars/" +
+    encodeURIComponent(CALENDAR_ID) +
+    "/events?key=" + API_KEY +
+    "&timeMin=" + now.toISOString() +
+    "&timeMax=" + future.toISOString() +
+    "&maxResults=2500" +
+    "&singleEvents=true" +
+    "&orderBy=startTime";
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        document.getElementById('status').innerHTML =
+          'Error loading calendar: ' + data.error.message +
+          '<br><small>Check that your API key is set and the calendar is public.</small>';
+        return;
+      }
+      allEvents = (data.items || []).map(function(item) {
+        var startDate = isoDate(item.start);
+        var endDate   = isoDate(item.end);
+        // Google Calendar all-day end dates are exclusive, subtract 1 day
+        if (item.end && item.end.date && endDate) {
+          var ed = new Date(endDate);
+          ed.setDate(ed.getDate() - 1);
+          endDate = ed.toISOString().substring(0, 10);
+        }
+        var parsed = parseDesc(item.description);
+        return {
+          id:           item.id,
+          title:        item.summary || 'Untitled',
+          startDate:    startDate,
+          endDate:      endDate,
+          startTime:    item.start && item.start.dateTime ? item.start.dateTime.substring(11,16) : null,
+          venue:        (item.location || '').split(',')[0].trim(),
+          fullLocation: item.location || '',
+          neighborhood: parsed.location ? parsed.location.split(',').pop().trim() : '',
+          price:        parsed.price || '',
+          tags:         parsed.tags || [],
+          summary:      item.description ? item.description.split('----------------')[0].replace(/Location:.*\n?/g,'').replace(/Price:.*\n?/g,'').replace(/Tags:.*\n?/g,'').replace(/Source:.*\n?/g,'').replace(/Event:.*\n?/g,'').trim() : '',
+          source:       parsed.source || '',
+          sourceUrl:    parsed.sourceUrl || '',
+          eventUrl:     parsed.eventUrl || '',
+          rawDescription: item.description || ''
+        };
+      }).filter(function(e) { return e.startDate; });
+
+      buildFilters();
+      renderEvents();
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('events-grid').style.display = 'grid';
+    })
+    .catch(function(err) {
+      document.getElementById('status').textContent = 'Failed to load: ' + err.message;
+    });
+}
+
+// ── Build filter dropdowns and tag buttons ────────────────────
+function buildFilters() {
+  // Neighborhoods
+  var neighborhoods = {};
+  var venues = {};
+  var tags = {};
+  allEvents.forEach(function(e) {
+    if (e.neighborhood) neighborhoods[e.neighborhood] = true;
+    if (e.venue) venues[e.venue] = true;
+    (e.tags || []).forEach(function(t) { tags[t] = (tags[t] || 0) + 1; });
+  });
+
+  var nhSel = document.getElementById('neighborhood-filter');
+  Object.keys(neighborhoods).sort().forEach(function(n) {
+    var o = document.createElement('option'); o.value = n; o.textContent = n;
+    nhSel.appendChild(o);
+  });
+
+  var vSel = document.getElementById('venue-filter');
+  Object.keys(venues).sort().forEach(function(v) {
+    if (!v) return;
+    var o = document.createElement('option'); o.value = v; o.textContent = v;
+    vSel.appendChild(o);
+  });
+
+  // Tag buttons — sorted by frequency
+  var strip = document.getElementById('tag-strip');
+  var tagList = Object.keys(tags).filter(function(t) {
+    return t !== 'Price Unknown' && t !== 'Free';
+  }).sort(function(a,b) { return tags[b] - tags[a]; });
+
+  // Add Free separately at front
+  if (tags['Free']) tagList.unshift('Free');
+
+  tagList.forEach(function(tag) {
+    var btn = document.createElement('button');
+    btn.className = 'tag-filter-btn';
+    btn.textContent = tag + ' (' + (tags[tag] || 0) + ')';
+    btn.dataset.tag = tag;
+    btn.addEventListener('click', function() {
+      if (activeTags.has(tag)) { activeTags.delete(tag); btn.classList.remove('active'); }
+      else { activeTags.add(tag); btn.classList.add('active'); }
+      renderEvents();
+    });
+    strip.appendChild(btn);
+  });
+
+  // Set default date from = today
+  document.getElementById('date-from').value = new Date().toISOString().substring(0, 10);
+}
+
+// ── Filter & render ───────────────────────────────────────────
+function renderEvents() {
+  var grid = document.getElementById('events-grid');
+  var today = new Date().toISOString().substring(0, 10);
+
+  var filtered = allEvents.filter(function(e) {
+    if (searchQuery && e.title.toLowerCase().indexOf(searchQuery) === -1 &&
+        (e.venue || '').toLowerCase().indexOf(searchQuery) === -1) return false;
+    if (filterNeighborhood && e.neighborhood !== filterNeighborhood) return false;
+    if (filterVenue && e.venue !== filterVenue) return false;
+    if (filterFrom && e.endDate < filterFrom) return false;
+    if (filterTo && e.startDate > filterTo) return false;
+    if (activeTags.size > 0) {
+      var eventTags = e.tags || [];
+      var hasAll = true;
+      activeTags.forEach(function(t) {
+        if (eventTags.indexOf(t) === -1) hasAll = false;
+      });
+      if (!hasAll) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('event-count').textContent = filtered.length;
+
+  grid.innerHTML = '';
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="no-results">No events match your filters.</div>';
+    return;
+  }
+
+  filtered.forEach(function(e) {
+    var card = document.createElement('div');
+    card.className = 'event-card';
+    var isMulti = e.startDate !== e.endDate;
+    var dateStr = fmtDateRange(e.startDate, e.endDate);
+    if (e.startTime) dateStr += ' · ' + e.startTime;
+
+    var visibleTags = (e.tags || []).filter(function(t) {
+      return t !== 'Price Unknown';
+    }).slice(0, 5);
+
+    card.innerHTML =
+      '<div class="event-date' + (isMulti ? ' multi' : '') + '">' + dateStr + '</div>' +
+      '<div class="event-title">' + esc(e.title) + '</div>' +
+      '<div class="event-venue">' +
+        (e.venue ? '<span>' + esc(e.venue) + '</span>' : '') +
+        (e.neighborhood ? ' · ' + esc(e.neighborhood) : '') +
+      '</div>' +
+      '<div class="event-tags">' +
+        visibleTags.map(function(t) {
+          var cls = 'tag';
+          var tl = t.toLowerCase().replace(' ', '-');
+          if (tl === 'free') cls += ' free';
+          else if (tl === 'queer') cls += ' queer';
+          else if (tl === 'vernissage') cls += ' vernissage';
+          else if (tl === 'festival') cls += ' festival';
+          return '<span class="' + cls + '">' + esc(t) + '</span>';
+        }).join('') +
+      '</div>';
+
+    card.addEventListener('click', function() { openModal(e); });
+    grid.appendChild(card);
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+function openModal(e) {
+  document.getElementById('modal-date').textContent =
+    fmtDateRange(e.startDate, e.endDate) + (e.startTime ? ' · ' + e.startTime : '');
+  document.getElementById('modal-title').textContent = e.title;
+
+  var meta = '';
+  if (e.fullLocation) meta += '<strong>Where</strong> ' + esc(e.fullLocation) + '<br>';
+  if (e.price)        meta += '<strong>Price</strong> ' + esc(e.price) + '<br>';
+  if (e.source)       meta += '<strong>Source</strong> ' + esc(e.source);
+  document.getElementById('modal-meta').innerHTML = meta;
+
+  // Extract just the summary text (before the dashes separator)
+  var summary = e.rawDescription.split('----------------')[0];
+  // Strip field lines
+  summary = summary.replace(/Location:.*\n?/g,'').replace(/Price:.*\n?/g,'')
+                   .replace(/Tags:.*\n?/g,'').replace(/Source:.*\n?/g,'')
+                   .replace(/Event:.*\n?/g,'').trim();
+  document.getElementById('modal-summary').textContent = summary;
+
+  var tagsHtml = (e.tags || []).map(function(t) {
+    return '<span class="tag">' + esc(t) + '</span>';
+  }).join('');
+  document.getElementById('modal-tags').innerHTML = tagsHtml;
+
+  var links = '';
+  if (e.eventUrl) links += '<a href="' + e.eventUrl + '" target="_blank" rel="noopener">Event page ↗</a>';
+  if (e.sourceUrl && e.sourceUrl !== e.eventUrl)
+    links += '<a href="' + e.sourceUrl + '" target="_blank" rel="noopener">Source ↗</a>';
+  document.getElementById('modal-links').innerHTML = links;
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ── Event wiring ──────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+
+document.getElementById('search-input').addEventListener('input', function() {
+  searchQuery = this.value.toLowerCase().trim();
+  renderEvents();
+});
+document.getElementById('neighborhood-filter').addEventListener('change', function() {
+  filterNeighborhood = this.value; renderEvents();
+});
+document.getElementById('venue-filter').addEventListener('change', function() {
+  filterVenue = this.value; renderEvents();
+});
+document.getElementById('date-from').addEventListener('change', function() {
+  filterFrom = this.value; renderEvents();
+});
+document.getElementById('date-to').addEventListener('change', function() {
+  filterTo = this.value; renderEvents();
+});
+document.getElementById('clear-btn').addEventListener('click', function() {
+  activeTags.clear();
+  document.querySelectorAll('.tag-filter-btn.active').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('search-input').value = '';
+  document.getElementById('neighborhood-filter').value = '';
+  document.getElementById('venue-filter').value = '';
+  document.getElementById('date-from').value = new Date().toISOString().substring(0, 10);
+  document.getElementById('date-to').value = '';
+  searchQuery = filterNeighborhood = filterVenue = filterTo = '';
+  filterFrom = new Date().toISOString().substring(0, 10);
+  renderEvents();
+});
+
+// ── Go ────────────────────────────────────────────────────────
+loadCalendar();
+</script>
+</body>
+</html>

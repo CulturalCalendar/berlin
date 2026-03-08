@@ -57,7 +57,7 @@
   .tag-filter-btn.tg-nightlife  { border-color: #c94e2a; }
   .tag-filter-btn.tg-visual     { border-color: #c98512; }
   .tag-filter-btn.tg-words      { border-color: #b09120; }
-  .tag-filter-btn.tg-other      { border-color: #3a3a3e; }
+  .tag-filter-btn.tg-other      { border-color: #9a8f3a; }   /* magma tail: warm pale yellow-white, muted */
 
   .tag-filter-btn.tg-community.active  { background: rgba(197,68,125,0.15);  border-color: #c5447d; color: #c5447d; }
   .tag-filter-btn.tg-screen.active     { background: rgba(130,38,129,0.18);  border-color: #a233a1; color: #a233a1; }
@@ -65,7 +65,7 @@
   .tag-filter-btn.tg-nightlife.active  { background: rgba(224,96,62,0.15);   border-color: #e0603e; color: #e0603e; }
   .tag-filter-btn.tg-visual.active     { background: rgba(248,165,36,0.12);  border-color: #f8a524; color: #f8a524; }
   .tag-filter-btn.tg-words.active      { background: rgba(249,209,98,0.10);  border-color: #f9d162; color: #f9d162; }
-  .tag-filter-btn.tg-other.active      { background: rgba(80,80,88,0.20);    border-color: #70707a; color: #70707a; }
+  .tag-filter-btn.tg-other.active      { background: rgba(252,253,191,0.08); border-color: #e8e4a0; color: #e8e4a0; }
 
   .tag-filter-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
   .tag-filter-btn:hover { border-color: var(--accent); color: var(--text); }
@@ -459,10 +459,10 @@ function buildFilters() {
   var TAG_GROUPS=[
     {cls:'tg-community',  tags:['Queer','Sexuality','Drag']},
     {cls:'tg-nightlife',  tags:['Techno','Party','Festival','Comedy']},
+    {cls:'tg-screen',     tags:['Film','Cinema']},
+    {cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
     {cls:'tg-performing', tags:['Concert','Theater','Dance','Opera']},
     {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Vernissage']},
-    {cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
-    {cls:'tg-screen',     tags:['Film','Cinema']},
     {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food']},
   ];
   // Build lookup: tag → group class

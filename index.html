@@ -53,6 +53,12 @@
   #search-input { width: 180px; }
   #clear-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 3px; cursor: pointer; transition: all 0.12s; }
   #clear-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  /* Price toggle buttons */
+  .price-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+  .price-btn:hover { border-color: var(--accent); color: var(--text); }
+  .price-btn.active[data-price="free"]    { background: #14532d; border-color: #4ade80; color: #4ade80; }
+  .price-btn.active[data-price="paid"]    { background: #1e1233; border-color: var(--accent); color: var(--accent); }
+  .price-btn.active[data-price="unknown"] { background: #2a2a2a; border-color: #666; color: #aaa; }
 
   /* Tag strip */
   #tag-strip { padding: 8px 20px; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
@@ -185,6 +191,15 @@
   <div class="filter-group">
     <select id="neighborhood-filter"><option value="">All neighborhoods</option></select>
     <select id="venue-filter"><option value="">All venues</option></select>
+    <select id="source-filter"><option value="">All sources</option></select>
+  </div>
+  <div class="filter-divider"></div>
+  <!-- Price filter as inline toggle buttons -->
+  <div class="filter-group">
+    <span class="filter-label">Price</span>
+    <button class="price-btn" data-price="free">Free</button>
+    <button class="price-btn" data-price="paid">Paid</button>
+    <button class="price-btn" data-price="unknown">Unknown</button>
   </div>
   <div class="filter-divider"></div>
   <button id="clear-btn">Clear all</button>
@@ -248,7 +263,8 @@ var MAX_PILLS   = 5;
 
 var allEvents = [], filteredEvents = [];
 var activeTags = new Set();
-var searchQuery = "", filterNeighborhood = "", filterVenue = "", filterFrom = "", filterTo = "";
+var searchQuery = "", filterNeighborhood = "", filterVenue = "", filterSource = "", filterFrom = "", filterTo = "";
+var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
 var currentView = "cal";
 var today = new Date();
 var calYear = today.getFullYear(), calMonth = today.getMonth();
@@ -357,7 +373,6 @@ function buildFilters() {
   Object.keys(v).sort().forEach(function(x){if(!x)return;var o=document.createElement('option');o.value=x;o.textContent=x;vSel.appendChild(o);});
   var strip=document.getElementById('tag-strip');
   var tagList=Object.keys(tags).filter(function(t){return t!=='Price Unknown'&&t!=='Free';}).sort(function(a,b){return tags[b]-tags[a];});
-  if(tags['Free']) tagList.unshift('Free');
   tagList.forEach(function(tag){
     var btn=document.createElement('button'); btn.className='tag-filter-btn';
     btn.textContent=tag+' ('+(tags[tag]||0)+')'; btn.dataset.tag=tag;
@@ -370,6 +385,28 @@ function buildFilters() {
   });
   filterFrom=new Date().toISOString().substring(0,10);
   document.getElementById('date-from').value=filterFrom;
+
+  // Build source filter dropdown
+  var sources={};
+  allEvents.forEach(function(e){ if(e.source) sources[e.source]=true; });
+  var sSel=document.getElementById('source-filter');
+  Object.keys(sources).sort().forEach(function(s){
+    var o=document.createElement('option'); o.value=s; o.textContent=s; sSel.appendChild(o);
+  });
+
+  // Wire price buttons
+  document.querySelectorAll('.price-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var p=btn.dataset.price;
+      if(filterPrice===p){ filterPrice=''; btn.classList.remove('active'); }
+      else {
+        filterPrice=p;
+        document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
+        btn.classList.add('active');
+      }
+      applyFilters();
+    });
+  });
 }
 
 function applyFilters() {
@@ -377,6 +414,14 @@ function applyFilters() {
     if(searchQuery&&e.title.toLowerCase().indexOf(searchQuery)===-1&&(e.venue||'').toLowerCase().indexOf(searchQuery)===-1) return false;
     if(filterNeighborhood&&e.neighborhood!==filterNeighborhood) return false;
     if(filterVenue&&e.venue!==filterVenue) return false;
+    if(filterSource&&e.source!==filterSource) return false;
+    // Price filtering: tags contain 'Free', 'Price Unknown', or neither (= paid/known)
+    if(filterPrice==='free'&&(e.tags||[]).indexOf('Free')===-1) return false;
+    if(filterPrice==='unknown'&&(e.tags||[]).indexOf('Price Unknown')===-1) return false;
+    if(filterPrice==='paid'){
+      var t=e.tags||[];
+      if(t.indexOf('Free')!==-1||t.indexOf('Price Unknown')!==-1) return false;
+    }
     if(filterFrom&&e.endDate<filterFrom) return false;
     if(filterTo&&e.startDate>filterTo) return false;
     if(activeTags.size>0){var h=true;activeTags.forEach(function(t){if((e.tags||[]).indexOf(t)===-1)h=false;});if(!h)return false;}
@@ -513,6 +558,7 @@ document.getElementById('cal-today-btn').addEventListener('click',function(){var
 document.getElementById('search-input').addEventListener('input',function(){searchQuery=this.value.toLowerCase().trim();applyFilters();});
 document.getElementById('neighborhood-filter').addEventListener('change',function(){filterNeighborhood=this.value;applyFilters();});
 document.getElementById('venue-filter').addEventListener('change',function(){filterVenue=this.value;applyFilters();});
+document.getElementById('source-filter').addEventListener('change',function(){filterSource=this.value;applyFilters();});
 document.getElementById('date-from').addEventListener('change',function(){filterFrom=this.value;applyFilters();});
 document.getElementById('date-to').addEventListener('change',function(){filterTo=this.value;applyFilters();});
 document.getElementById('clear-btn').addEventListener('click',function(){
@@ -523,7 +569,10 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   document.getElementById('venue-filter').value='';
   document.getElementById('date-from').value=new Date().toISOString().substring(0,10);
   document.getElementById('date-to').value='';
-  searchQuery=filterNeighborhood=filterVenue=filterTo='';
+  searchQuery=filterNeighborhood=filterVenue=filterSource=filterTo='';
+  filterPrice='';
+  document.getElementById('source-filter').value='';
+  document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
   filterFrom=new Date().toISOString().substring(0,10);
   applyFilters();
 });

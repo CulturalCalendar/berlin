@@ -183,6 +183,7 @@
   .cal-day { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-height: 100px; padding: 4px; position: relative; overflow: hidden; min-width: 0; }
   .cal-day.other-month { background: var(--bg); }
   .cal-day.today { background: #13102a; }
+  body.light .cal-day.today { background: #0e0e0e; }
   .cal-day-num { font-size: 11px; color: var(--muted); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 3px; }
   .cal-day.today .cal-day-num { background: var(--accent); color: #000; font-weight: 500; }
   .cal-event-pill { display: flex; align-items: center; gap: 4px; width: 100%; font-size: 11px; line-height: 1.3; padding: 2px 4px 2px 7px; margin-bottom: 2px; border-radius: 2px; background: var(--surface2); border: none; color: var(--text); cursor: pointer; transition: background 0.1s; text-align: left; font-family: 'DM Mono', monospace; overflow: hidden; position: relative; }
@@ -786,16 +787,16 @@ function updateVenueTrigger() {
 // Open/close venue dropdown
 _venueTrigger.addEventListener('click', function(e) {
   e.stopPropagation();
-  if (!_venueDropdown.classList.contains('open')) refreshVenueDropdown();
-  _venueDropdown.classList.toggle('open');
+  var opening = !_venueDropdown.classList.contains('open');
+  closeAllDropdowns();
+  if (opening) { refreshVenueDropdown(); _venueDropdown.classList.add('open'); }
 });
-document.addEventListener('click', function() {
+function closeAllDropdowns() {
   _venueDropdown.classList.remove('open');
-  var sd = document.getElementById('source-dropdown');
-  if (sd) sd.classList.remove('open');
-  var ld = document.getElementById('lang-dropdown');
-  if (ld) ld.classList.remove('open');
-});
+  if (_sourceDropdown) _sourceDropdown.classList.remove('open');
+  if (_langDropdown)   _langDropdown.classList.remove('open');
+}
+document.addEventListener('click', closeAllDropdowns);
 _venueDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
 
 // ── Source multi-select dropdown ──────────────────────────────
@@ -837,7 +838,9 @@ function updateSourceTrigger() {
 if (_sourceTrigger) {
   _sourceTrigger.addEventListener('click', function(e) {
     e.stopPropagation();
-    _sourceDropdown.classList.toggle('open');
+    var opening = !_sourceDropdown.classList.contains('open');
+    closeAllDropdowns();
+    if (opening) _sourceDropdown.classList.add('open');
   });
   _sourceDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
 }
@@ -880,7 +883,9 @@ function updateLangTrigger() {
 if (_langTrigger) {
   _langTrigger.addEventListener('click', function(e) {
     e.stopPropagation();
-    _langDropdown.classList.toggle('open');
+    var opening = !_langDropdown.classList.contains('open');
+    closeAllDropdowns();
+    if (opening) _langDropdown.classList.add('open');
   });
   _langDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
 }
@@ -1227,7 +1232,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
-  if(_venueDropdown) _venueDropdown.classList.remove('open');
+  closeAllDropdowns();
   if(_tagTrack) setTagMode('and');
   applyFilters();
 });
@@ -1248,7 +1253,7 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
-  if(_venueDropdown) _venueDropdown.classList.remove('open');
+  closeAllDropdowns();
   if(_tagTrack) setTagMode('and');
   // Return calendar to today's month
   var t=new Date(); calYear=t.getFullYear(); calMonth=t.getMonth();

@@ -40,7 +40,8 @@
 
   /* Header */
   header { border-bottom: 1px solid var(--border); padding: 22px 20px 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
-  .site-title { font-family: 'DM Serif Display', serif; font-size: clamp(24px, 3.5vw, 44px); line-height: 1; letter-spacing: -0.02em; }
+  .site-title { font-family: 'DM Serif Display', serif; font-size: clamp(24px, 3.5vw, 44px); line-height: 1; letter-spacing: -0.02em; background: none; border: none; padding: 0; cursor: pointer; color: inherit; text-align: left; }
+  .site-title:hover em { text-decoration: underline; text-underline-offset: 4px; }
   .site-title em { color: var(--accent); font-style: italic; }
   .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
   .header-meta { color: var(--muted); font-size: 12px; text-align: right; line-height: 1.6; }
@@ -276,7 +277,7 @@
 <body>
 
 <header>
-  <div class="site-title">Berlin<br><em>Cultural</em> Calendar</div>
+  <button class="site-title" id="site-title-btn" title="Clear all filters and return to today">Berlin<br><em>Cultural</em> Calendar</button>
   <div class="header-right">
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end;">
       <div class="theme-toggle-wrap">
@@ -400,7 +401,6 @@
     <p>Events are scraped weekly from a range of Berlin cultural publications and venue websites, then processed by an AI model (Google Gemini) which extracts event details, tags, and writes them into a shared Google Calendar. The website reads directly from that calendar in real time.</p>
     <p><strong>Sources include:</strong> Siegessäule, The Next Day Berlin, CeeCee, Index Berlin, Tip Berlin, The Berliner, Resident Advisor, Volksbühne, Maxim Gorki Theater, Berghain, Schinkelpavillon, Fotografiska, We Are Village, and others.</p>
     <p>The project is built with Google Apps Script, the Gemini API, and plain HTML/JS — no backend, no database, no tracking.</p>
-    <p>Made with curiosity.</p>
   </div>
 </div>
 
@@ -959,13 +959,26 @@ function closeModal(){document.getElementById('modal-overlay').classList.remove(
 function openDayPopup(dateStr,events){
   document.getElementById('day-popup-date').textContent=fmtFullDate(dateStr);
   var list=document.getElementById('day-popup-list'); list.innerHTML='';
-  events.forEach(function(ev){
+  // Sort: timed events first (chronological), then all-day events (alphabetical)
+  var sorted = events.slice().sort(function(a, b) {
+    var aHasTime = !!a.startTime, bHasTime = !!b.startTime;
+    if (aHasTime && !bHasTime) return -1;
+    if (!aHasTime && bHasTime) return 1;
+    if (aHasTime && bHasTime) {
+      if (a.startTime < b.startTime) return -1;
+      if (a.startTime > b.startTime) return 1;
+      return 0;
+    }
+    // Both all-day: alphabetical by title
+    return a.title.localeCompare(b.title);
+  });
+  sorted.forEach(function(ev){
     var row=document.createElement('div'); row.className='popup-event-row';
     var dotHtml=getPopupDots(ev.tags).replace('class="pill-dots"','class="popup-event-dots"');
     row.innerHTML='<div style="display:flex;align-items:center;gap:6px">'+dotHtml+'<div><div class="popup-event-title">'+esc(ev.title)+'</div><div class="popup-event-meta">'+(ev.startTime?ev.startTime+' · ':'')+esc(ev.venue||'')+'</div></div></div>';
     row.addEventListener('click',function(){closeDayPopup();openModal(ev);});
     list.appendChild(row);
-  });
+  }); // sorted.forEach
   document.getElementById('day-popup-overlay').classList.add('open');
 }
 function closeDayPopup(){document.getElementById('day-popup-overlay').classList.remove('open');}
@@ -1002,6 +1015,31 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   updateVenueTrigger();
   if(_venueDropdown) _venueDropdown.classList.remove('open');
   if(_tagTrack) setTagMode('and');
+  applyFilters();
+});
+
+document.getElementById('site-title-btn').addEventListener('click', function() {
+  // Clear all filter state
+  activeTags.clear();
+  searchQuery=''; filterNeighborhood=''; filterSource=''; filterTo='';
+  filterVenues.clear();
+  filterPrice='';
+  filterFrom=new Date().toISOString().substring(0,10);
+  tagMode='and';
+  // Reset filter UI
+  document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('search-input').value='';
+  document.getElementById('neighborhood-filter').value='';
+  document.getElementById('source-filter').value='';
+  document.getElementById('date-from').value=filterFrom;
+  document.getElementById('date-to').value='';
+  document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
+  updateVenueTrigger();
+  if(_venueDropdown) _venueDropdown.classList.remove('open');
+  if(_tagTrack) setTagMode('and');
+  // Return calendar to today's month
+  var t=new Date(); calYear=t.getFullYear(); calMonth=t.getMonth();
+  if(currentView!=='cal') switchView('cal');
   applyFilters();
 });
 

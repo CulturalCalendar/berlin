@@ -31,8 +31,8 @@
     --accent: #7c3aed;
     --accent2: #b45309;
     --text: #1a1814;
-    --muted: #6b6457;
-    --muted2: #8a8070;
+    --muted: #3d3830;
+    --muted2: #5a5448;
     --tag-bg: #eae6de;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -473,7 +473,7 @@ function setTagMode(mode) {
 
 // ── Theme toggle ──────────────────────────────────────────────
 var _themeTrack = document.getElementById('theme-toggle-track');
-function setTheme(mode) {
+function setTheme(mode, save) {
   if (mode === 'light') {
     document.body.classList.add('light');
     _themeTrack.classList.add('light-mode');
@@ -485,7 +485,16 @@ function setTheme(mode) {
     document.getElementById('theme-label-dark').classList.add('lit');
     document.getElementById('theme-label-light').classList.remove('lit');
   }
+  if (save !== false) {
+    try { localStorage.setItem('bcc-theme', mode); } catch(e) {}
+  }
 }
+// Restore saved theme preference
+(function() {
+  var saved = null;
+  try { saved = localStorage.getItem('bcc-theme'); } catch(e) {}
+  if (saved === 'light') setTheme('light', false);
+})();
 _themeTrack.addEventListener('click', function() {
   setTheme(document.body.classList.contains('light') ? 'dark' : 'light');
 });
@@ -699,7 +708,6 @@ function applyFilters() {
   filteredEvents=allEvents.filter(function(e){
     if(searchQuery&&e.title.toLowerCase().indexOf(searchQuery)===-1&&(e.venue||'').toLowerCase().indexOf(searchQuery)===-1) return false;
     if(filterNeighborhood&&e.neighborhood!==filterNeighborhood) return false;
-    if(filterVenue&&e.venue!==filterVenue) return false;
     if(filterVenues.size>0&&!filterVenues.has(e.venue)) return false;
     if(filterSource&&e.source!==filterSource) return false;
     // Price filtering: tags contain 'Free', 'Price Unknown', or neither (= paid/known)
@@ -868,7 +876,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   document.getElementById('date-from').value=new Date().toISOString().substring(0,10);
   document.getElementById('date-to').value='';
   searchQuery=filterNeighborhood=filterSource=filterTo='';
-  filterVenues.clear(); updateVenueTrigger();
+  filterVenues.clear(); updateVenueTrigger(); if(_venueDropdown) _venueDropdown.classList.remove('open');
   filterPrice='';
   document.getElementById('source-filter').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});

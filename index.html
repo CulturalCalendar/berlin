@@ -280,7 +280,7 @@
       <button class="venue-filter-trigger" id="venue-filter-trigger">All venues ▾</button>
       <div class="venue-dropdown" id="venue-dropdown"></div>
     </div>
-    <select id="source-filter"><option value="">All publications</option></select>
+    <select id="source-filter"><option value="">Seen in…</option></select>
   </div>
   <div class="filter-divider"></div>
   <!-- Price filter as inline toggle buttons -->
@@ -667,24 +667,12 @@ function buildFilters() {
     var o=document.createElement('option'); o.value=s; o.textContent=s; sSel.appendChild(o);
   });
 
-  // Wire tag mode sliding toggle
+  // Wire tag mode sliding toggle — setTagMode is defined at top level
   var track = document.getElementById('tag-toggle-track');
-  function setTagMode(mode) {
-    tagMode = mode;
-    if (mode === 'or') {
-      track.classList.add('or-mode');
-      document.getElementById('tag-label-and').classList.remove('lit');
-      document.getElementById('tag-label-or').classList.add('lit');
-    } else {
-      track.classList.remove('or-mode');
-      document.getElementById('tag-label-and').classList.add('lit');
-      document.getElementById('tag-label-or').classList.remove('lit');
-    }
-    applyFilters();
-  }
-  track.addEventListener('click', function() { setTagMode(tagMode === 'and' ? 'or' : 'and'); });
-  document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); });
-  document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  });
+  _tagTrack = track;
+  track.addEventListener('click', function() { setTagMode(tagMode==='and'?'or':'and'); applyFilters(); });
+  document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); applyFilters(); });
+  document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  applyFilters(); });
 
   // Wire price buttons
   document.querySelectorAll('.price-btn').forEach(function(btn){
@@ -694,9 +682,6 @@ function buildFilters() {
       else {
         filterPrice=p;
         document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
-  tagMode='and';
-  document.getElementById('tag-mode-and').classList.add('active');
-  document.getElementById('tag-mode-or').classList.remove('active');
         btn.classList.add('active');
       }
       applyFilters();
@@ -827,7 +812,7 @@ function openModal(e) {
     meta+='<strong>Where</strong> <a href="'+mapsUrl+'" target="_blank" rel="noopener" class="meta-link">'+esc(e.fullLocation)+' ↗</a><br>';
   }
   if(e.price) meta+='<strong>Price</strong> '+esc(e.price)+'<br>';
-  if(e.source) meta+='<strong>Source</strong> '+esc(e.source);
+  if(e.source) meta+='<strong>Seen in</strong> '+esc(e.source)+'<br>';
   document.getElementById('modal-meta').innerHTML=meta;
   document.getElementById('modal-summary').textContent=e.summary;
   document.getElementById('modal-tags').innerHTML=(e.tags||[]).map(function(t){return '<span class="'+tagClass(t)+'">'+esc(t)+'</span>';}).join('');
@@ -868,20 +853,24 @@ document.getElementById('source-filter').addEventListener('change',function(){fi
 document.getElementById('date-from').addEventListener('change',function(){filterFrom=this.value;applyFilters();});
 document.getElementById('date-to').addEventListener('change',function(){filterTo=this.value;applyFilters();});
 document.getElementById('clear-btn').addEventListener('click',function(){
+  // Reset state
   activeTags.clear();
+  searchQuery=''; filterNeighborhood=''; filterSource=''; filterTo='';
+  filterVenues.clear();
+  filterPrice='';
+  filterFrom=new Date().toISOString().substring(0,10);
+  tagMode='and';
+  // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.getElementById('search-input').value='';
   document.getElementById('neighborhood-filter').value='';
-  document.getElementById('venue-filter').value='';
-  document.getElementById('date-from').value=new Date().toISOString().substring(0,10);
-  document.getElementById('date-to').value='';
-  searchQuery=filterNeighborhood=filterSource=filterTo='';
-  filterVenues.clear(); updateVenueTrigger(); if(_venueDropdown) _venueDropdown.classList.remove('open');
-  filterPrice='';
   document.getElementById('source-filter').value='';
+  document.getElementById('date-from').value=filterFrom;
+  document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
-  tagMode='and'; setTagMode('and');
-  filterFrom=new Date().toISOString().substring(0,10);
+  updateVenueTrigger();
+  if(_venueDropdown) _venueDropdown.classList.remove('open');
+  if(_tagTrack) setTagMode('and');
   applyFilters();
 });
 

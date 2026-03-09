@@ -612,54 +612,55 @@ function parseDesc(desc) {
 }
 
 
+// Source label normalization map — used by normalizeSourceLabel() and refreshSourceDropdown()
+var SOURCE_LABELS = {
+  'Siegessaeule':           'Siegessäule',
+  'TheBerliner':            'The Berliner',
+  'TheBerliner_Monthly':    'The Berliner',
+  'TheBerliner_Exhibitions':'The Berliner',
+  'TheBerliner_Weekend':    'The Berliner',
+  'IndexBerlin':            'Index Berlin',
+  'IndexBerlin_Exhibitions':'Index Berlin',
+  'IndexBerlin_Events':     'Index Berlin',
+  'BerlinEventsWeekly':     'Berlin Events Weekly',
+  'JuliaSchneider':         'Julia Schneider',
+  'TheNextDay':             'The Next Day',
+  'RA_Berlin':              'Resident Advisor',
+  'TipBerlin':              'Tip Berlin',
+  'WeAreVillage':           'We Are Village',
+  'SchinkelPavillon':       'Schinkelpavillon',
+  'Berghain':               'Berghain',
+  'Volksbuehne':            'Volksbühne',
+  'Gorki':                  'Maxim Gorki Theater',
+  'Fotografiska':           'Fotografiska',
+  'CeeCee':                 'CeeCee',
+  'InstitutFrancais':       'Institut Français',
+  'GoetheInstitut':         'Goethe Institut',
+  'Cervantes':              'Instituto Cervantes',
+  'SilentGreen':            'silent green',
+  'Sophiensaele':           'Sophiensæle',
+  'HumboldtForum':          'Humboldt Forum',
+  'JDZB':                   'JDZB',
+  'KulturKorea_Main':       'KulturKorea',
+  'KulturKorea_List':       'KulturKorea',
+  'BrazilianEmbassy':       'Brasilianische Botschaft',
+  'HAU':                    'HAU Hebbel am Ufer',
+  'TipsyBear':              'Tipsy Bear',
+  'RadialSystem':           'Radialsystem',
+  'NordischeBotschaften_Ausstellungen':   'Nordische Botschaften',
+  'NordischeBotschaften_Veranstaltungen': 'Nordische Botschaften',
+  'AmerikaHaus':            'Amerika Haus',
+  'PolishInstitute':        'Polnisches Institut',
+  'FestivalTicker':         'Festival Ticker',
+  'FestivalAlarm':          'Festival Alarm',
+  'TheLeftBerlin':          'The Left Berlin',
+};
+
 function normalizeSourceLabel(raw) {
   if (!raw) return '';
   // Strip suffixes like _A, _B, _C, _D, _1, _2 etc.
   var s = raw.replace(/_[A-D]$/, '').replace(/_\d+$/, '');
-  // Map internal names to display labels
-  var MAP = {
-    'Siegessaeule':           'Siegessäule',
-    'TheBerliner':            'The Berliner',
-    'TheBerliner_Monthly':    'The Berliner',
-    'TheBerliner_Exhibitions':'The Berliner',
-    'TheBerliner_Weekend':    'The Berliner',
-    'IndexBerlin':            'Index Berlin',
-    'IndexBerlin_Exhibitions':'Index Berlin',
-    'IndexBerlin_Events':     'Index Berlin',
-    'BerlinEventsWeekly':     'Berlin Events Weekly',
-    'JuliaSchneider':         'Julia Schneider',
-    'TheNextDay':             'The Next Day',
-    'RA_Berlin':              'Resident Advisor',
-    'TipBerlin':              'Tip Berlin',
-    'WeAreVillage':           'We Are Village',
-    'SchinkelPavillon':       'Schinkelpavillon',
-    'Berghain':               'Berghain',
-    'Volksbuehne':            'Volksbühne',
-    'Gorki':                  'Maxim Gorki Theater',
-    'Fotografiska':           'Fotografiska',
-    'CeeCee':                 'CeeCee',
-    'InstitutFrancais':       'Institut Français',
-    'GoetheInstitut':         'Goethe Institut',
-    'Cervantes':              'Instituto Cervantes',
-    'SilentGreen':            'silent green',
-    'Sophiensaele':           'Sophiensæle',
-    'HumboldtForum':          'Humboldt Forum',
-    'JDZB':                   'JDZB',
-    'KulturKorea_Main':       'KulturKorea',
-    'KulturKorea_List':       'KulturKorea',
-    'BrazilianEmbassy':       'Brasilianische Botschaft',
-    'HAU':                    'HAU Hebbel am Ufer',
-    'TipsyBear':              'Tipsy Bear',
-    'RadialSystem':           'Radialsystem',
-    'NordischeBotschaften_Ausstellungen':   'Nordische Botschaften',
-    'NordischeBotschaften_Veranstaltungen': 'Nordische Botschaften',
-    'AmerikaHaus':            'Amerika Haus',
-    'PolishInstitute':        'Polnisches Institut',
-    'FestivalTicker':         'Festival Ticker',
-    'FestivalAlarm':          'Festival Alarm',
-    'TheLeftBerlin':          'The Left Berlin',
-  };
-  return MAP[s] || MAP[raw] || raw;
+  return SOURCE_LABELS[s] || SOURCE_LABELS[raw] || raw;
 }
 // ── hoisted so clear-btn can call it before buildFilters runs ──
 var _tagTrack = null;
@@ -803,7 +804,7 @@ var _sourceDropdown = document.getElementById('source-dropdown');
 var _allSources = []; // populated by buildFilters
 
 function refreshSourceDropdown(sourceList) {
-  if (sourceList) _allSources = sourceList;
+  if (sourceList !== undefined) _allSources = sourceList;
   if (!_sourceDropdown) return;
   _sourceDropdown.innerHTML = '';
   var hdr = document.createElement('div'); hdr.className='venue-dropdown-header';
@@ -1207,28 +1208,25 @@ document.getElementById('cal-next').addEventListener('click',function(){calMonth
 document.getElementById('cal-today-btn').addEventListener('click',function(){var t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();renderCalendar();});
 document.getElementById('search-input').addEventListener('input',function(){searchQuery=this.value.toLowerCase().trim();applyFilters();});
 document.getElementById('neighborhood-filter').addEventListener('change',function(){filterNeighborhood=this.value;applyFilters();});
-document.getElementById('source-filter').addEventListener('change',function(){// source now multi-select — handled by dropdown});
+// source-filter select removed — now using multi-select dropdown
 document.getElementById('date-from').addEventListener('change',function(){filterFrom=this.value;applyFilters();});
 document.getElementById('date-to').addEventListener('change',function(){filterTo=this.value;applyFilters();});
 document.getElementById('clear-btn').addEventListener('click',function(){
   // Reset state
-  activeTags.clear(); filterLangs.clear(); filterSources.clear(); updateSourceTrigger(); updateLangTrigger();
+  activeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
+  updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger();
   searchQuery=''; filterNeighborhood=''; filterTo='';
-  filterVenues.clear();
   filterPrice='';
-
-
   filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.getElementById('search-input').value='';
   document.getElementById('neighborhood-filter').value='';
-  filterSources.clear(); updateSourceTrigger(); refreshSourceDropdown();
+  refreshSourceDropdown();
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
-  updateVenueTrigger();
   if(_venueDropdown) _venueDropdown.classList.remove('open');
   if(_tagTrack) setTagMode('and');
   applyFilters();
@@ -1236,23 +1234,20 @@ document.getElementById('clear-btn').addEventListener('click',function(){
 
 document.getElementById('site-title-btn').addEventListener('click', function() {
   // Clear all filter state
-  activeTags.clear(); filterLangs.clear(); filterSources.clear(); updateSourceTrigger(); updateLangTrigger();
+  activeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
+  updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger();
   searchQuery=''; filterNeighborhood=''; filterTo='';
-  filterVenues.clear();
   filterPrice='';
-
-
   filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.getElementById('search-input').value='';
   document.getElementById('neighborhood-filter').value='';
-  filterSources.clear(); updateSourceTrigger(); refreshSourceDropdown();
+  refreshSourceDropdown();
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
-  updateVenueTrigger();
   if(_venueDropdown) _venueDropdown.classList.remove('open');
   if(_tagTrack) setTagMode('and');
   // Return calendar to today's month

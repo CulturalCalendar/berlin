@@ -1103,4 +1103,10 @@ loadCalendar();
   ['about','impressum'].forEach(function(name) {
     document.getElementById(name+'-btn').addEventListener('click', function() { openOverlay(name+'-overlay'); });
     document.getElementById(name+'-close').addEventListener('click', function() { closeOverlay(name+'-overlay'); });
-    document.getElementById(name+'-overlay').addEventListener('c
+    document.getElementById(name+'-close').addEventListener('click', function() { closeOverlay(name+'-overlay'); });
+    document.getElementById(name+'-overlay').addEventListener('click', function(e) { if(e.target===this) closeOverlay(name+'-overlay'); });
+  });
+})();
+</script>
+</body>
+</html>

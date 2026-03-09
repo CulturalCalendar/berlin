@@ -138,6 +138,24 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.4);
   }
   .tag-toggle-track.or-mode .tag-toggle-knob { transform: translateX(24px); }
+  /* SFW toggle */
+  .sfw-wrap { display: flex; align-items: center; gap: 7px; margin-left: 14px; flex-shrink: 0; }
+  .sfw-label { font-size: 11px; color: var(--muted2); font-family: 'DM Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; user-select: none; cursor: pointer; }
+  .sfw-label.lit { color: var(--accent); }
+  .sfw-toggle-track {
+    position: relative; width: 44px; height: 20px;
+    background: var(--surface3); border: 1px solid var(--border2);
+    border-radius: 10px; cursor: pointer; flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .sfw-toggle-track:hover { border-color: var(--accent); }
+  .sfw-toggle-knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--muted2); transition: transform 0.22s cubic-bezier(.4,0,.2,1), background 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .sfw-toggle-track.sfw-on .sfw-toggle-knob { transform: translateX(24px); background: var(--accent); }
 
   /* Status */
   #status { padding: 60px 40px; text-align: center; color: var(--muted); font-size: 12px; }
@@ -341,6 +359,13 @@
       </div>
       <span class="tag-mode-label" id="tag-label-or">OR</span>
     </div>
+    <div class="sfw-wrap">
+      <span class="sfw-label" id="sfw-label-off">🔞</span>
+      <div class="sfw-toggle-track" id="sfw-toggle-track" title="Hide explicit sexual content">
+        <div class="sfw-toggle-knob"></div>
+      </div>
+      <span class="sfw-label" id="sfw-label-on">SFW</span>
+    </div>
   </div>
   <div class="tag-strip-tags" id="tag-strip-tags"></div>
 </div>
@@ -413,7 +438,7 @@
 
     <h3>Angaben gemäß § 5 TMG</h3>
     <p>Diese Website ist ein privates, nicht-kommerzielles Projekt ohne wirtschaftliche Absicht. Sie dient ausschließlich der persönlichen Information und wird ohne Gewinnerzielungsabsicht betrieben.</p>
-    <p>Kontakt: <a href="mailto:culturalcalendarberlin@gmail.com">culturalcalendarberlin@gmail.com</a></p>
+    <p>Kontakt: <a href="/cdn-cgi/l/email-protection#d5b6a0b9a1a0a7b4b9b6b4b9b0bbb1b4a7b7b0a7b9bcbb95b2b8b4bcb9fbb6bab8"><span class="__cf_email__" data-cfemail="fc9f899088898e9d909f9d909992989d8e9e998e909592bc9b919d9590d29f9391">[email&#160;protected]</span></a></p>
 
     <h3>Haftungsausschluss</h3>
     <p>Die Inhalte dieser Seite werden automatisiert aus öffentlich zugänglichen Quellen zusammengestellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Veranstaltungsinformationen wird keine Gewähr übernommen. Eventdetails können sich ändern — bitte prüft die verlinkten Quellen direkt.</p>
@@ -436,7 +461,7 @@
   <button class="footer-link" id="impressum-btn">Impressum &amp; Datenschutz</button>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var CALENDAR_ID = "c794825d58f6596385fa07a5d06fb9462bbe1dff7b33f92499aebdae52374119@group.calendar.google.com";
 var API_KEY     = "AIzaSyCY9zEbTaT7fU5tTU7wPQdOSuR5Lr-k9ho";
 var MAX_PILLS   = 5;
@@ -447,6 +472,7 @@ var searchQuery = "", filterNeighborhood = "", filterSource = "", filterFrom = "
 var filterVenues = new Set(); // multi-select
 var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
 var tagMode = 'and'; // 'and' | 'or'
+var sfwMode = false; // hides events tagged 'Explicit' when true
 var currentView = "cal";
 var today = new Date();
 var calYear = today.getFullYear(), calMonth = today.getMonth();
@@ -593,6 +619,23 @@ function setTagMode(mode) {
     _tagTrack.classList.remove('or-mode');
     document.getElementById('tag-label-and').classList.add('lit');
     document.getElementById('tag-label-or').classList.remove('lit');
+  }
+}
+
+function setSfwMode(on) {
+  sfwMode = on;
+  var track = document.getElementById('sfw-toggle-track');
+  var labelOn = document.getElementById('sfw-label-on');
+  var labelOff = document.getElementById('sfw-label-off');
+  if (!track) return;
+  if (on) {
+    track.classList.add('sfw-on');
+    labelOn.classList.add('lit');
+    labelOff.classList.remove('lit');
+  } else {
+    track.classList.remove('sfw-on');
+    labelOn.classList.remove('lit');
+    labelOff.classList.add('lit');
   }
 }
 
@@ -765,7 +808,7 @@ function buildFilters() {
   });
   var known=new Set(grouped);
   Object.keys(tags).forEach(function(t){
-    if(!known.has(t)&&t!=='Price Unknown'&&t!=='Free') grouped.push(t);
+    if(!known.has(t)&&t!=='Price Unknown'&&t!=='Free'&&t!=='Explicit') grouped.push(t);
   });
 
   var strip=document.getElementById('tag-strip-tags');
@@ -799,6 +842,12 @@ function buildFilters() {
   document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); applyFilters(); });
   document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  applyFilters(); });
 
+  // Wire SFW toggle
+  var sfwTrack = document.getElementById('sfw-toggle-track');
+  sfwTrack.addEventListener('click', function() { setSfwMode(!sfwMode); applyFilters(); });
+  document.getElementById('sfw-label-on').addEventListener('click',  function() { setSfwMode(!sfwMode); applyFilters(); });
+  document.getElementById('sfw-label-off').addEventListener('click', function() { setSfwMode(!sfwMode); applyFilters(); });
+
   // Wire price buttons
   document.querySelectorAll('.price-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -829,6 +878,7 @@ function applyFilters() {
     }
     if(filterFrom&&e.endDate<filterFrom) return false;
     if(filterTo&&e.startDate>filterTo) return false;
+    if(sfwMode&&(e.tags||[]).indexOf('Explicit')!==-1) return false;
     if(activeTags.size>0){
       var et=e.tags||[];
       if(tagMode==='and'){
@@ -924,7 +974,7 @@ function renderCards() {
     var card=document.createElement('div'); card.className='event-card';
     var isMulti=e.startDate!==e.endDate;
     var dateStr=fmtDateRange(e.startDate,e.endDate)+(e.startTime?' · '+e.startTime:'');
-    var vTags=(e.tags||[]).filter(function(t){return t!=='Price Unknown';}).slice(0,5);
+    var vTags=(e.tags||[]).filter(function(t){return t!=='Price Unknown'&&t!=='Explicit';}).slice(0,5);
     card.innerHTML=
       '<div class="event-date'+(isMulti?' multi':'')+'">'+dateStr+'</div>'+
       '<div class="event-title">'+esc(e.title)+'</div>'+
@@ -947,7 +997,7 @@ function openModal(e) {
   if(e.source) meta+='<strong>Seen in</strong> '+esc(e.source)+'<br>';
   document.getElementById('modal-meta').innerHTML=meta;
   document.getElementById('modal-summary').textContent=e.summary;
-  document.getElementById('modal-tags').innerHTML=(e.tags||[]).filter(function(t){return t!=='Price Unknown';}).map(function(t){return '<span class="'+tagClass(t)+'">'+esc(t)+'</span>';}).join('');
+  document.getElementById('modal-tags').innerHTML=(e.tags||[]).filter(function(t){return t!=='Price Unknown'&&t!=='Explicit';}).map(function(t){return '<span class="'+tagClass(t)+'">'+esc(t)+'</span>';}).join('');
   var links='';
   if(e.officialUrl) links+='<a href="'+esc(e.officialUrl)+'" target="_blank" rel="noopener">Event page ↗</a>';
   if(e.eventUrl&&e.eventUrl!==e.officialUrl) links+='<a href="'+esc(e.eventUrl)+'" target="_blank" rel="noopener">Event listing ↗</a>';
@@ -1053,13 +1103,4 @@ loadCalendar();
   ['about','impressum'].forEach(function(name) {
     document.getElementById(name+'-btn').addEventListener('click', function() { openOverlay(name+'-overlay'); });
     document.getElementById(name+'-close').addEventListener('click', function() { closeOverlay(name+'-overlay'); });
-    document.getElementById(name+'-overlay').addEventListener('click', function(e) { if(e.target===this) closeOverlay(name+'-overlay'); });
-  });
-  document.addEventListener('keydown', function(e) {
-    if(e.key==='Escape') { closeOverlay('about-overlay'); closeOverlay('impressum-overlay'); }
-  });
-})();
-</script>
-
-</body>
-</html>
+    document.getElementById(name+'-overlay').addEventListener('c

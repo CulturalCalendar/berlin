@@ -80,6 +80,8 @@
   .tag-filter-btn.tg-nightlife  { border-color: #9a8820; }
   .tag-filter-btn.tg-other      { border-color: #7a2555; }
   .tag-filter-btn.tg-community  { border-color: #8a8060; }
+  .tag-filter-btn.tg-place      { border-color: #4a2a7a; }  /* indigo: Indoor/Outdoor */
+  .tag-filter-btn.tg-language   { border-color: #0e7490; }  /* teal: language tags */
 
   .tag-filter-btn.tg-visual.active     { background: rgba(248,165,36,0.12);  border-color: #f8a524; color: #f8a524; }
   .tag-filter-btn.tg-performing.active { background: rgba(155,110,224,0.15); border-color: #9b6ee0; color: #9b6ee0; }
@@ -88,6 +90,8 @@
   .tag-filter-btn.tg-nightlife.active  { background: rgba(249,209,98,0.10);  border-color: #f9d162; color: #f9d162; }
   .tag-filter-btn.tg-other.active      { background: rgba(197,68,125,0.14);  border-color: #c5447d; color: #c5447d; }
   .tag-filter-btn.tg-community.active  { background: rgba(232,228,160,0.08); border-color: #e8e4a0; color: #e8e4a0; }
+  .tag-filter-btn.tg-place.active      { background: rgba(99,102,241,0.15);  border-color: #6366f1; color: #6366f1; }
+  .tag-filter-btn.tg-language.active   { background: rgba(45,212,191,0.12);  border-color: #2dd4bf; color: #2dd4bf; }
 
   .tag-filter-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
   .tag-filter-btn:hover { border-color: var(--accent); color: var(--text); }
@@ -157,6 +161,18 @@
   }
   .sfw-toggle-track.sfw-on .sfw-toggle-knob { transform: translateX(24px); background: var(--accent); }
 
+  /* Language filter collapsible */
+  .lang-strip { padding: 6px 20px 10px; border-bottom: 1px solid var(--border); }
+  .lang-strip-toggle { display: flex; align-items: center; gap: 7px; cursor: pointer; width: fit-content; margin-bottom: 0; }
+  .lang-strip-toggle-label { font-size: 11px; color: var(--muted2); font-family: 'DM Mono', monospace;
+    letter-spacing: 0.06em; text-transform: uppercase; user-select: none; transition: color 0.15s; }
+  .lang-strip-toggle-label:hover { color: var(--accent); }
+  .lang-strip-caret { font-size: 9px; color: var(--muted2); transition: transform 0.2s, color 0.15s; }
+  .lang-strip-toggle:hover .lang-strip-caret { color: var(--accent); }
+  .lang-strip-caret.open { transform: rotate(90deg); }
+  .lang-strip-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; display: none; }
+  .lang-strip-tags.open { display: flex; }
+
   /* Status */
   #status { padding: 60px 40px; text-align: center; color: var(--muted); font-size: 12px; }
   .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
@@ -214,6 +230,8 @@
   .tag.tg-other      { border-color: #c5447d; color: #c5447d; }
   .tag.tg-community  { border-color: #e8e4a0; color: #e8e4a0; }
   .tag.tg-free       { border-color: #4ade80; color: #4ade80; }
+  .tag.tg-location   { border-color: #6366f1; color: #6366f1; }
+  .tag.tg-lang       { border-color: #06b6d4; color: #06b6d4; }
   /* In light mode, tag text uses dark body color so it reads on off-white background */
   body.light .tag { color: var(--text); }
   body.light .tag.tg-visual     { color: var(--text); }
@@ -224,6 +242,8 @@
   body.light .tag.tg-other      { color: var(--text); }
   body.light .tag.tg-community  { color: var(--text); }
   body.light .tag.tg-free       { color: var(--text); }
+  body.light .tag.tg-location   { color: var(--text); }
+  body.light .tag.tg-lang       { color: var(--text); }
   .no-results { grid-column: 1/-1; padding: 60px 0; text-align: center; color: var(--muted); }
 
   /* ── Event detail modal ── */
@@ -273,6 +293,17 @@
   .info-box a { color: var(--accent); text-decoration: none; }
   .info-box a:hover { text-decoration: underline; }
   .info-box em { color: var(--muted); font-style: italic; }
+
+
+  /* Language filter section */
+  #lang-strip { padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
+  .lang-strip-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 7px 0 4px; user-select: none; }
+  .lang-strip-toggle:hover .lang-toggle-label { color: var(--text); }
+  .lang-toggle-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; transition: color 0.15s; }
+  .lang-chevron { font-size: 10px; color: var(--muted2); transition: transform 0.2s; display: inline-block; }
+  .lang-chevron.open { transform: rotate(90deg); }
+  .lang-strip-tags { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 4px; }
+  .lang-strip-tags.hidden { display: none; }
 
   @media (max-width: 700px) {
     header, #filters, #tag-strip, .cal-nav { padding-left: 12px; padding-right: 12px; }
@@ -370,6 +401,21 @@
   <div class="tag-strip-tags" id="tag-strip-tags"></div>
 </div>
 
+<div id="lang-strip">
+  <div class="lang-strip-toggle" id="lang-toggle-btn">
+    <span class="lang-chevron" id="lang-chevron">▶</span>
+    <span class="lang-toggle-label">Language filters</span>
+  </div>
+  <div class="lang-strip-tags hidden" id="lang-strip-tags"></div>
+</div>
+<div id="lang-strip" class="lang-strip">
+  <div class="lang-strip-toggle" id="lang-strip-toggle">
+    <span class="lang-strip-caret" id="lang-strip-caret">▶</span>
+    <span class="lang-strip-toggle-label">Language</span>
+  </div>
+  <div class="lang-strip-tags" id="lang-strip-tags"></div>
+</div>
+
 <div id="status"><span class="spinner"></span> Loading calendar…</div>
 
 <!-- Calendar view -->
@@ -424,7 +470,7 @@
     <h2>About this calendar</h2>
     <p>This is a personal project aggregating cultural events happening in Berlin — concerts, exhibitions, theater, parties, film screenings, readings, and more.</p>
     <p>Events are scraped weekly from a range of Berlin cultural publications and venue websites, then processed by an AI model (Google Gemini) which extracts event details, tags, and writes them into a shared Google Calendar. The website reads directly from that calendar in real time.</p>
-    <p><strong>Sources include:</strong> Siegessäule, The Next Day Berlin, CeeCee, Index Berlin, Tip Berlin, The Berliner, Resident Advisor, Volksbühne, Maxim Gorki Theater, Berghain, Schinkelpavillon, Fotografiska, We Are Village, and others.</p>
+    <p><strong>Sources include:</strong> Siegessäule, The Next Day Berlin, CeeCee, Index Berlin, Tip Berlin, The Berliner, Resident Advisor, Volksbühne, Maxim Gorki Theater, Berghain, Schinkelpavillon, Fotografiska, We Are Village, Institut Français, Goethe Institut, Instituto Cervantes, silent green, Sophiensæle, Humboldt Forum, JDZB, KulturKorea, HAU Hebbel am Ufer, Radialsystem, Nordische Botschaften, Amerika Haus, Polnisches Institut, The Left Berlin, and others.</p>
     <p>The project is built with Google Apps Script, the Gemini API, and plain HTML/JS — no backend, no database, no tracking.</p>
     <p>Made by Tom Offrede.</p>
   </div>
@@ -438,7 +484,7 @@
 
     <h3>Angaben gemäß § 5 TMG</h3>
     <p>Diese Website ist ein privates, nicht-kommerzielles Projekt ohne wirtschaftliche Absicht. Sie dient ausschließlich der persönlichen Information und wird ohne Gewinnerzielungsabsicht betrieben.</p>
-    <p>Kontakt: <a href="/cdn-cgi/l/email-protection#d5b6a0b9a1a0a7b4b9b6b4b9b0bbb1b4a7b7b0a7b9bcbb95b2b8b4bcb9fbb6bab8"><span class="__cf_email__" data-cfemail="fc9f899088898e9d909f9d909992989d8e9e998e909592bc9b919d9590d29f9391">[email&#160;protected]</span></a></p>
+    <p>Kontakt: culturalcalendarberlin [at] gmail.com</p>
 
     <h3>Haftungsausschluss</h3>
     <p>Die Inhalte dieser Seite werden automatisiert aus öffentlich zugänglichen Quellen zusammengestellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Veranstaltungsinformationen wird keine Gewähr übernommen. Eventdetails können sich ändern — bitte prüft die verlinkten Quellen direkt.</p>
@@ -472,7 +518,8 @@ var searchQuery = "", filterNeighborhood = "", filterSource = "", filterFrom = "
 var filterVenues = new Set(); // multi-select
 var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
 var tagMode = 'and'; // 'and' | 'or'
-var sfwMode = false; // hides events tagged 'Explicit' when true
+var sfwMode = false;
+var filterLangs = new Set(); // OR between languages, AND with tag filters
 var currentView = "cal";
 var today = new Date();
 var calYear = today.getFullYear(), calMonth = today.getMonth();
@@ -504,6 +551,8 @@ var TAG_DOT_COLORS = {
   'Workshop':'#c5447d','Market':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d',
   'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Drag':'#e8e4a0',
   'Free':'#4ade80',
+  'Finissage':'#f8a524',
+  'Indoor':'#6366f1','Outdoor':'#6366f1',
 };
 
 // Calendar pill: only show green dot for Free events
@@ -549,6 +598,11 @@ var TAG_CLASS_MAP = {
   'Workshop':'tg-other','Market':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other',
   'Queer':'tg-community','Sexuality':'tg-community','Drag':'tg-community',
   'Free':'tg-free',
+  'Finissage':'tg-visual',
+  'Indoor':'tg-location','Outdoor':'tg-location',
+  'German':'tg-lang','English':'tg-lang','French':'tg-lang','Spanish':'tg-lang',
+  'Italian':'tg-lang','Polish':'tg-lang','Japanese':'tg-lang','Korean':'tg-lang',
+  'Arabic':'tg-lang','Turkish':'tg-lang','Language-Free':'tg-lang',
 };
 function tagClass(t) {
   return 'tag ' + (TAG_CLASS_MAP[t] || '');
@@ -602,6 +656,26 @@ function normalizeSourceLabel(raw) {
     'Gorki':                  'Maxim Gorki Theater',
     'Fotografiska':           'Fotografiska',
     'CeeCee':                 'CeeCee',
+    'InstitutFrancais':       'Institut Français',
+    'GoetheInstitut':         'Goethe Institut',
+    'Cervantes':              'Instituto Cervantes',
+    'SilentGreen':            'silent green',
+    'Sophiensaele':           'Sophiensæle',
+    'HumboldtForum':          'Humboldt Forum',
+    'JDZB':                   'JDZB',
+    'KulturKorea_Main':       'KulturKorea',
+    'KulturKorea_List':       'KulturKorea',
+    'BrazilianEmbassy':       'Brasilianische Botschaft',
+    'HAU':                    'HAU Hebbel am Ufer',
+    'TipsyBear':              'Tipsy Bear',
+    'RadialSystem':           'Radialsystem',
+    'NordischeBotschaften_Ausstellungen':   'Nordische Botschaften',
+    'NordischeBotschaften_Veranstaltungen': 'Nordische Botschaften',
+    'AmerikaHaus':            'Amerika Haus',
+    'PolishInstitute':        'Polnisches Institut',
+    'FestivalTicker':         'Festival Ticker',
+    'FestivalAlarm':          'Festival Alarm',
+    'TheLeftBerlin':          'The Left Berlin',
   };
   return MAP[s] || MAP[raw] || raw;
 }
@@ -789,14 +863,16 @@ function buildFilters() {
   Object.keys(nh).sort().forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;nhSel.appendChild(o);});
   // venue dropdown built dynamically by refreshVenueDropdown()
   var TAG_GROUPS=[
-    {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Vernissage']},
+    {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Vernissage','Finissage']},
     {cls:'tg-performing', tags:['Concert','Theater','Dance','Opera']},
     {cls:'tg-screen',     tags:['Film','Cinema']},
     {cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
     {cls:'tg-nightlife',  tags:['Techno','Party','Festival','Comedy']},
     {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food','Protest']},
     {cls:'tg-community',  tags:['Queer','Sexuality','Drag']},
+    {cls:'tg-place',      tags:['Indoor','Outdoor']},
   ];
+  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Language-Free'];
   // Build lookup: tag → group class
   var tagGroupMap={};
   TAG_GROUPS.forEach(function(g){g.tags.forEach(function(t){tagGroupMap[t]=g.cls;});});
@@ -807,8 +883,9 @@ function buildFilters() {
     g.tags.forEach(function(t){ if(tags[t]) grouped.push(t); });
   });
   var known=new Set(grouped);
+  var LANG_SET = new Set(LANG_TAGS);
   Object.keys(tags).forEach(function(t){
-    if(!known.has(t)&&t!=='Price Unknown'&&t!=='Free'&&t!=='Explicit') grouped.push(t);
+    if(!known.has(t)&&t!=='Price Unknown'&&t!=='Free'&&t!=='Explicit'&&!LANG_SET.has(t)) grouped.push(t);
   });
 
   var strip=document.getElementById('tag-strip-tags');
@@ -824,8 +901,53 @@ function buildFilters() {
     });
     strip.appendChild(btn);
   });
+
+  // Build language tag strip
+  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Language-Free'];
+  var langStrip = document.getElementById('lang-strip-tags');
+  LANG_TAGS.forEach(function(lang) {
+    if (!tags[lang]) return; // only show langs that have events
+    var btn = document.createElement('button');
+    btn.className = 'tag-filter-btn tg-lang';
+    btn.textContent = lang + ' (' + (tags[lang]||0) + ')';
+    btn.dataset.lang = lang;
+    btn.addEventListener('click', function() {
+      if (filterLangs.has(lang)) { filterLangs.delete(lang); btn.classList.remove('active'); }
+      else { filterLangs.add(lang); btn.classList.add('active'); }
+      applyFilters();
+    });
+    langStrip.appendChild(btn);
+  });
+
+  // Wire language collapsible toggle
+  document.getElementById('lang-toggle-btn').addEventListener('click', function() {
+    var strip = document.getElementById('lang-strip-tags');
+    var chevron = document.getElementById('lang-chevron');
+    var isHidden = strip.classList.contains('hidden');
+    strip.classList.toggle('hidden', !isHidden);
+    chevron.classList.toggle('open', isHidden);
+  });
   filterFrom=new Date().toISOString().substring(0,10);
   document.getElementById('date-from').value=filterFrom;
+
+  // Build language collapsible section
+  var langContainer = document.getElementById('lang-strip-tags');
+  if (langContainer) {
+    langContainer.innerHTML = '';
+    LANG_TAGS.forEach(function(tag) {
+      if (!tags[tag]) return; // only show langs that appear in data
+      var btn = document.createElement('button');
+      btn.className = 'tag-filter-btn tg-language';
+      btn.textContent = tag + ' (' + (tags[tag]||0) + ')';
+      btn.dataset.tag = tag;
+      btn.addEventListener('click', function() {
+        if (filterLangs.has(tag)) { filterLangs.delete(tag); btn.classList.remove('active'); }
+        else { filterLangs.add(tag); btn.classList.add('active'); }
+        applyFilters();
+      });
+      langContainer.appendChild(btn);
+    });
+  }
 
   // Build source filter dropdown
   var sources={};
@@ -841,6 +963,17 @@ function buildFilters() {
   track.addEventListener('click', function() { setTagMode(tagMode==='and'?'or':'and'); applyFilters(); });
   document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); applyFilters(); });
   document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  applyFilters(); });
+
+  // Wire language strip toggle
+  var langToggle = document.getElementById('lang-strip-toggle');
+  var langCaret  = document.getElementById('lang-strip-caret');
+  var langTags   = document.getElementById('lang-strip-tags');
+  if (langToggle) {
+    langToggle.addEventListener('click', function() {
+      var open = langTags.classList.toggle('open');
+      langCaret.classList.toggle('open', open);
+    });
+  }
 
   // Wire SFW toggle
   var sfwTrack = document.getElementById('sfw-toggle-track');
@@ -879,6 +1012,13 @@ function applyFilters() {
     if(filterFrom&&e.endDate<filterFrom) return false;
     if(filterTo&&e.startDate>filterTo) return false;
     if(sfwMode&&(e.tags||[]).indexOf('Explicit')!==-1) return false;
+    // Language filter: OR between selected languages, AND with other filters
+    if(filterLangs.size>0){
+      var et2=e.tags||[];
+      var anyLang=false;
+      filterLangs.forEach(function(l){if(et2.indexOf(l)!==-1)anyLang=true;});
+      if(!anyLang) return false;
+    }
     if(activeTags.size>0){
       var et=e.tags||[];
       if(tagMode==='and'){
@@ -1049,10 +1189,36 @@ document.getElementById('date-from').addEventListener('change',function(){filter
 document.getElementById('date-to').addEventListener('change',function(){filterTo=this.value;applyFilters();});
 document.getElementById('clear-btn').addEventListener('click',function(){
   // Reset state
-  activeTags.clear();
+  activeTags.clear(); filterLangs.clear();
   searchQuery=''; filterNeighborhood=''; filterSource=''; filterTo='';
   filterVenues.clear();
   filterPrice='';
+
+  // Build language tag strip
+  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Language-Free'];
+  var langStrip = document.getElementById('lang-strip-tags');
+  LANG_TAGS.forEach(function(lang) {
+    if (!tags[lang]) return; // only show langs that have events
+    var btn = document.createElement('button');
+    btn.className = 'tag-filter-btn tg-lang';
+    btn.textContent = lang + ' (' + (tags[lang]||0) + ')';
+    btn.dataset.lang = lang;
+    btn.addEventListener('click', function() {
+      if (filterLangs.has(lang)) { filterLangs.delete(lang); btn.classList.remove('active'); }
+      else { filterLangs.add(lang); btn.classList.add('active'); }
+      applyFilters();
+    });
+    langStrip.appendChild(btn);
+  });
+
+  // Wire language collapsible toggle
+  document.getElementById('lang-toggle-btn').addEventListener('click', function() {
+    var strip = document.getElementById('lang-strip-tags');
+    var chevron = document.getElementById('lang-chevron');
+    var isHidden = strip.classList.contains('hidden');
+    strip.classList.toggle('hidden', !isHidden);
+    chevron.classList.toggle('open', isHidden);
+  });
   filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset UI
@@ -1071,10 +1237,36 @@ document.getElementById('clear-btn').addEventListener('click',function(){
 
 document.getElementById('site-title-btn').addEventListener('click', function() {
   // Clear all filter state
-  activeTags.clear();
+  activeTags.clear(); filterLangs.clear();
   searchQuery=''; filterNeighborhood=''; filterSource=''; filterTo='';
   filterVenues.clear();
   filterPrice='';
+
+  // Build language tag strip
+  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Language-Free'];
+  var langStrip = document.getElementById('lang-strip-tags');
+  LANG_TAGS.forEach(function(lang) {
+    if (!tags[lang]) return; // only show langs that have events
+    var btn = document.createElement('button');
+    btn.className = 'tag-filter-btn tg-lang';
+    btn.textContent = lang + ' (' + (tags[lang]||0) + ')';
+    btn.dataset.lang = lang;
+    btn.addEventListener('click', function() {
+      if (filterLangs.has(lang)) { filterLangs.delete(lang); btn.classList.remove('active'); }
+      else { filterLangs.add(lang); btn.classList.add('active'); }
+      applyFilters();
+    });
+    langStrip.appendChild(btn);
+  });
+
+  // Wire language collapsible toggle
+  document.getElementById('lang-toggle-btn').addEventListener('click', function() {
+    var strip = document.getElementById('lang-strip-tags');
+    var chevron = document.getElementById('lang-chevron');
+    var isHidden = strip.classList.contains('hidden');
+    strip.classList.toggle('hidden', !isHidden);
+    chevron.classList.toggle('open', isHidden);
+  });
   filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset filter UI

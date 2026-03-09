@@ -41,7 +41,7 @@
   /* Header */
   header { border-bottom: 1px solid var(--border); padding: 22px 20px 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
   .site-title { font-family: 'DM Serif Display', serif; font-size: clamp(24px, 3.5vw, 44px); line-height: 1; letter-spacing: -0.02em; background: none; border: none; padding: 0; cursor: pointer; color: inherit; text-align: left; }
-  .site-title:hover em { text-decoration: underline; text-underline-offset: 4px; }
+  .site-title:hover { opacity: 0.85; }
   .site-title em { color: var(--accent); font-style: italic; }
   .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
   .header-meta { color: var(--muted); font-size: 12px; text-align: right; line-height: 1.6; }
@@ -401,6 +401,7 @@
     <p>Events are scraped weekly from a range of Berlin cultural publications and venue websites, then processed by an AI model (Google Gemini) which extracts event details, tags, and writes them into a shared Google Calendar. The website reads directly from that calendar in real time.</p>
     <p><strong>Sources include:</strong> Siegessäule, The Next Day Berlin, CeeCee, Index Berlin, Tip Berlin, The Berliner, Resident Advisor, Volksbühne, Maxim Gorki Theater, Berghain, Schinkelpavillon, Fotografiska, We Are Village, and others.</p>
     <p>The project is built with Google Apps Script, the Gemini API, and plain HTML/JS — no backend, no database, no tracking.</p>
+    <p>Made by Tom Offrede.</p>
   </div>
 </div>
 
@@ -474,7 +475,7 @@ var TAG_DOT_COLORS = {
   'Film':'#e0603e','Cinema':'#e0603e',
   'Literature':'#a233a1','Talk':'#a233a1','Poetry':'#a233a1','Book Club':'#a233a1',
   'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162',
-  'Workshop':'#c5447d','Market':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d',
+  'Workshop':'#c5447d','Market':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d',
   'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Drag':'#e8e4a0',
   'Free':'#4ade80',
 };
@@ -519,7 +520,7 @@ var TAG_CLASS_MAP = {
   'Film':'tg-screen','Cinema':'tg-screen',
   'Literature':'tg-words','Talk':'tg-words','Poetry':'tg-words','Book Club':'tg-words',
   'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife',
-  'Workshop':'tg-other','Market':'tg-other','Guided Tour':'tg-other','Food':'tg-other',
+  'Workshop':'tg-other','Market':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other',
   'Queer':'tg-community','Sexuality':'tg-community','Drag':'tg-community',
   'Free':'tg-free',
 };
@@ -750,7 +751,7 @@ function buildFilters() {
     {cls:'tg-screen',     tags:['Film','Cinema']},
     {cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
     {cls:'tg-nightlife',  tags:['Techno','Party','Festival','Comedy']},
-    {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food']},
+    {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food','Protest']},
     {cls:'tg-community',  tags:['Queer','Sexuality','Drag']},
   ];
   // Build lookup: tag → group class

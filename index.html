@@ -161,17 +161,7 @@
   }
   .sfw-toggle-track.sfw-on .sfw-toggle-knob { transform: translateX(24px); background: var(--accent); }
 
-  /* Language filter collapsible */
-  .lang-strip { padding: 6px 20px 10px; border-bottom: 1px solid var(--border); }
-  .lang-strip-toggle { display: flex; align-items: center; gap: 7px; cursor: pointer; width: fit-content; margin-bottom: 0; }
-  .lang-strip-toggle-label { font-size: 11px; color: var(--muted2); font-family: 'DM Mono', monospace;
-    letter-spacing: 0.06em; text-transform: uppercase; user-select: none; transition: color 0.15s; }
-  .lang-strip-toggle-label:hover { color: var(--accent); }
-  .lang-strip-caret { font-size: 9px; color: var(--muted2); transition: transform 0.2s, color 0.15s; }
-  .lang-strip-toggle:hover .lang-strip-caret { color: var(--accent); }
-  .lang-strip-caret.open { transform: rotate(90deg); }
-  .lang-strip-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; display: none; }
-  .lang-strip-tags.open { display: flex; }
+
 
   /* Status */
   #status { padding: 60px 40px; text-align: center; color: var(--muted); font-size: 12px; }
@@ -295,16 +285,6 @@
   .info-box em { color: var(--muted); font-style: italic; }
 
 
-  /* Language filter section */
-  #lang-strip { padding: 0 20px 10px; border-bottom: 1px solid var(--border); }
-  .lang-strip-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 7px 0 4px; user-select: none; }
-  .lang-strip-toggle:hover .lang-toggle-label { color: var(--text); }
-  .lang-toggle-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; transition: color 0.15s; }
-  .lang-chevron { font-size: 10px; color: var(--muted2); transition: transform 0.2s; display: inline-block; }
-  .lang-chevron.open { transform: rotate(90deg); }
-  .lang-strip-tags { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 4px; }
-  .lang-strip-tags.hidden { display: none; }
-
   @media (max-width: 700px) {
     header, #filters, #tag-strip, .cal-nav { padding-left: 12px; padding-right: 12px; }
     .cal-grid-wrap { padding-left: 12px; padding-right: 12px; }
@@ -366,7 +346,14 @@
       <button class="venue-filter-trigger" id="venue-filter-trigger">All venues ▾</button>
       <div class="venue-dropdown" id="venue-dropdown"></div>
     </div>
-    <select id="source-filter"><option value="">Seen in…</option></select>
+    <div class="venue-filter-wrap" id="source-filter-wrap">
+      <button class="venue-filter-trigger" id="source-filter-trigger">Seen in… ▾</button>
+      <div class="venue-dropdown" id="source-dropdown"></div>
+    </div>
+    <div class="venue-filter-wrap" id="lang-filter-wrap">
+      <button class="venue-filter-trigger" id="lang-filter-trigger">Language ▾</button>
+      <div class="venue-dropdown" id="lang-dropdown"></div>
+    </div>
   </div>
   <div class="filter-divider"></div>
   <!-- Price filter as inline toggle buttons -->
@@ -401,20 +388,7 @@
   <div class="tag-strip-tags" id="tag-strip-tags"></div>
 </div>
 
-<div id="lang-strip">
-  <div class="lang-strip-toggle" id="lang-toggle-btn">
-    <span class="lang-chevron" id="lang-chevron">▶</span>
-    <span class="lang-toggle-label">Language filters</span>
-  </div>
-  <div class="lang-strip-tags hidden" id="lang-strip-tags"></div>
-</div>
-<div id="lang-strip" class="lang-strip">
-  <div class="lang-strip-toggle" id="lang-strip-toggle">
-    <span class="lang-strip-caret" id="lang-strip-caret">▶</span>
-    <span class="lang-strip-toggle-label">Language</span>
-  </div>
-  <div class="lang-strip-tags" id="lang-strip-tags"></div>
-</div>
+
 
 <div id="status"><span class="spinner"></span> Loading calendar…</div>
 
@@ -509,13 +483,18 @@
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var CALENDAR_ID = "c794825d58f6596385fa07a5d06fb9462bbe1dff7b33f92499aebdae52374119@group.calendar.google.com";
+// This Google Calendar API key is read-only and restricted to the Calendar API.
+// It is intentionally public (required for a static GitHub Pages site).
+// In Google Cloud Console, restrict this key: API = "Calendar API" + HTTP referrer = your domain.
 var API_KEY     = "AIzaSyCY9zEbTaT7fU5tTU7wPQdOSuR5Lr-k9ho";
 var MAX_PILLS   = 5;
 
 var allEvents = [], filteredEvents = [];
 var activeTags = new Set();
-var searchQuery = "", filterNeighborhood = "", filterSource = "", filterFrom = "", filterTo = "";
-var filterVenues = new Set(); // multi-select
+var searchQuery = "", filterNeighborhood = "", filterFrom = "", filterTo = "";
+var filterVenues  = new Set(); // multi-select, OR
+var filterSources = new Set(); // multi-select, OR
+// filterLangs already declared above
 var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
 var tagMode = 'and'; // 'and' | 'or'
 var sfwMode = false;
@@ -578,12 +557,15 @@ function getPopupDots(tags) {
   return all ? '<div class="pill-dots">'+all+'</div>' : '';
 }
 
-// Return array of unique tag-group colors for the pill bar (excl. green/Free)
+// Return array of unique tag-group colors for the pill bar (excl. Free, Indoor/Outdoor, language)
+var PILL_EXCLUDE = new Set(['Free','Indoor','Outdoor',
+  'German','English','French','Spanish','Italian','Polish','Japanese','Korean','Language-Free']);
 function pillColors(tags) {
   var seen = {}, cols = [];
   (tags||[]).forEach(function(t) {
+    if (PILL_EXCLUDE.has(t)) return;
     var col = TAG_DOT_COLORS[t];
-    if (col && col !== '#4ade80' && !seen[col]) { seen[col]=true; cols.push(col); }
+    if (col && !seen[col]) { seen[col]=true; cols.push(col); }
   });
   return cols;
 }
@@ -599,10 +581,10 @@ var TAG_CLASS_MAP = {
   'Queer':'tg-community','Sexuality':'tg-community','Drag':'tg-community',
   'Free':'tg-free',
   'Finissage':'tg-visual',
-  'Indoor':'tg-location','Outdoor':'tg-location',
-  'German':'tg-lang','English':'tg-lang','French':'tg-lang','Spanish':'tg-lang',
-  'Italian':'tg-lang','Polish':'tg-lang','Japanese':'tg-lang','Korean':'tg-lang',
-  'Arabic':'tg-lang','Turkish':'tg-lang','Language-Free':'tg-lang',
+  'Indoor':'tg-place','Outdoor':'tg-place',
+  'German':'tg-language','English':'tg-language','French':'tg-language','Spanish':'tg-language',
+  'Italian':'tg-language','Polish':'tg-language','Japanese':'tg-language','Korean':'tg-language',
+  'Language-Free':'tg-language',
 };
 function tagClass(t) {
   return 'tag ' + (TAG_CLASS_MAP[t] || '');
@@ -753,7 +735,7 @@ function refreshVenueDropdown() {
   var eligible = allEvents.filter(function(e) {
     if (searchQuery && e.title.toLowerCase().indexOf(searchQuery)===-1 && (e.venue||'').toLowerCase().indexOf(searchQuery)===-1) return false;
     if (filterNeighborhood && e.neighborhood !== filterNeighborhood) return false;
-    if (filterSource && e.source !== filterSource) return false;
+    if (filterSources.size>0&&!filterSources.has(e.source)) return false;
     if (filterFrom && e.endDate < filterFrom) return false;
     if (filterTo   && e.startDate > filterTo)  return false;
     if (filterPrice==='free'    && (e.tags||[]).indexOf('Free')===-1) return false;
@@ -800,14 +782,107 @@ function updateVenueTrigger() {
   _venueTrigger.classList.toggle('has-selection', n>0);
 }
 
-// Open/close dropdown
+// Open/close venue dropdown
 _venueTrigger.addEventListener('click', function(e) {
   e.stopPropagation();
   if (!_venueDropdown.classList.contains('open')) refreshVenueDropdown();
   _venueDropdown.classList.toggle('open');
 });
-document.addEventListener('click', function() { _venueDropdown.classList.remove('open'); });
+document.addEventListener('click', function() {
+  _venueDropdown.classList.remove('open');
+  var sd = document.getElementById('source-dropdown');
+  if (sd) sd.classList.remove('open');
+  var ld = document.getElementById('lang-dropdown');
+  if (ld) ld.classList.remove('open');
+});
 _venueDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+
+// ── Source multi-select dropdown ──────────────────────────────
+var _sourceTrigger = document.getElementById('source-filter-trigger');
+var _sourceDropdown = document.getElementById('source-dropdown');
+var _allSources = []; // populated by buildFilters
+
+function refreshSourceDropdown(sourceList) {
+  if (sourceList) _allSources = sourceList;
+  if (!_sourceDropdown) return;
+  _sourceDropdown.innerHTML = '';
+  var hdr = document.createElement('div'); hdr.className='venue-dropdown-header';
+  var lbl = document.createElement('span'); lbl.style.cssText='font-size:11px;color:var(--muted);font-family:DM Mono,monospace;';
+  lbl.textContent = _allSources.length + ' sources';
+  var clr = document.createElement('button'); clr.className='venue-dropdown-clear'; clr.textContent='Clear';
+  clr.addEventListener('click', function(e) { e.stopPropagation(); filterSources.clear(); refreshSourceDropdown(); updateSourceTrigger(); applyFilters(); });
+  hdr.appendChild(lbl); hdr.appendChild(clr); _sourceDropdown.appendChild(hdr);
+  _allSources.forEach(function(src) {
+    var label = SOURCE_LABELS[src] || src;
+    var row = document.createElement('div'); row.className='venue-option';
+    var cb = document.createElement('input'); cb.type='checkbox'; cb.id='sopt-'+src;
+    cb.checked = filterSources.has(src);
+    var lbl2 = document.createElement('label'); lbl2.htmlFor='sopt-'+src; lbl2.textContent=label;
+    cb.addEventListener('change', function() {
+      if (cb.checked) filterSources.add(src); else filterSources.delete(src);
+      updateSourceTrigger(); applyFilters();
+    });
+    row.appendChild(cb); row.appendChild(lbl2); _sourceDropdown.appendChild(row);
+  });
+}
+
+function updateSourceTrigger() {
+  if (!_sourceTrigger) return;
+  var n = filterSources.size;
+  _sourceTrigger.textContent = n===0 ? 'Seen in… ▾' : n+' source'+(n>1?'s':'')+' ▾';
+  _sourceTrigger.classList.toggle('has-selection', n>0);
+}
+
+if (_sourceTrigger) {
+  _sourceTrigger.addEventListener('click', function(e) {
+    e.stopPropagation();
+    _sourceDropdown.classList.toggle('open');
+  });
+  _sourceDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+}
+
+// ── Language multi-select dropdown ────────────────────────────
+var _langTrigger = document.getElementById('lang-filter-trigger');
+var _langDropdown = document.getElementById('lang-dropdown');
+
+function refreshLangDropdown(langList, tagCounts) {
+  if (!_langDropdown) return;
+  _langDropdown.innerHTML = '';
+  var hdr = document.createElement('div'); hdr.className='venue-dropdown-header';
+  var lbl = document.createElement('span'); lbl.style.cssText='font-size:11px;color:var(--muted);font-family:DM Mono,monospace;';
+  lbl.textContent = 'Language';
+  var clr = document.createElement('button'); clr.className='venue-dropdown-clear'; clr.textContent='Clear';
+  clr.addEventListener('click', function(e) { e.stopPropagation(); filterLangs.clear(); refreshLangDropdown(langList, tagCounts); updateLangTrigger(); applyFilters(); });
+  hdr.appendChild(lbl); hdr.appendChild(clr); _langDropdown.appendChild(hdr);
+  (langList||[]).forEach(function(lang) {
+    var count = tagCounts ? (tagCounts[lang]||0) : 0;
+    var row = document.createElement('div'); row.className='venue-option';
+    var cb = document.createElement('input'); cb.type='checkbox'; cb.id='lopt-'+lang;
+    cb.checked = filterLangs.has(lang);
+    var lbl2 = document.createElement('label'); lbl2.htmlFor='lopt-'+lang;
+    lbl2.textContent = lang + (count ? ' ('+count+')' : '');
+    cb.addEventListener('change', function() {
+      if (cb.checked) filterLangs.add(lang); else filterLangs.delete(lang);
+      updateLangTrigger(); applyFilters();
+    });
+    row.appendChild(cb); row.appendChild(lbl2); _langDropdown.appendChild(row);
+  });
+}
+
+function updateLangTrigger() {
+  if (!_langTrigger) return;
+  var n = filterLangs.size;
+  _langTrigger.textContent = n===0 ? 'Language ▾' : n+' lang'+(n>1?'s':'')+' ▾';
+  _langTrigger.classList.toggle('has-selection', n>0);
+}
+
+if (_langTrigger) {
+  _langTrigger.addEventListener('click', function(e) {
+    e.stopPropagation();
+    _langDropdown.classList.toggle('open');
+  });
+  _langDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+}
 
 function loadCalendar() {
   var now=new Date(), fut=new Date(now); fut.setMonth(fut.getMonth()+9);
@@ -902,60 +977,19 @@ function buildFilters() {
     strip.appendChild(btn);
   });
 
-  // Build language tag strip
-  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Language-Free'];
-  var langStrip = document.getElementById('lang-strip-tags');
-  LANG_TAGS.forEach(function(lang) {
-    if (!tags[lang]) return; // only show langs that have events
-    var btn = document.createElement('button');
-    btn.className = 'tag-filter-btn tg-lang';
-    btn.textContent = lang + ' (' + (tags[lang]||0) + ')';
-    btn.dataset.lang = lang;
-    btn.addEventListener('click', function() {
-      if (filterLangs.has(lang)) { filterLangs.delete(lang); btn.classList.remove('active'); }
-      else { filterLangs.add(lang); btn.classList.add('active'); }
-      applyFilters();
-    });
-    langStrip.appendChild(btn);
-  });
 
-  // Wire language collapsible toggle
-  document.getElementById('lang-toggle-btn').addEventListener('click', function() {
-    var strip = document.getElementById('lang-strip-tags');
-    var chevron = document.getElementById('lang-chevron');
-    var isHidden = strip.classList.contains('hidden');
-    strip.classList.toggle('hidden', !isHidden);
-    chevron.classList.toggle('open', isHidden);
-  });
   filterFrom=new Date().toISOString().substring(0,10);
   document.getElementById('date-from').value=filterFrom;
 
-  // Build language collapsible section
-  var langContainer = document.getElementById('lang-strip-tags');
-  if (langContainer) {
-    langContainer.innerHTML = '';
-    LANG_TAGS.forEach(function(tag) {
-      if (!tags[tag]) return; // only show langs that appear in data
-      var btn = document.createElement('button');
-      btn.className = 'tag-filter-btn tg-language';
-      btn.textContent = tag + ' (' + (tags[tag]||0) + ')';
-      btn.dataset.tag = tag;
-      btn.addEventListener('click', function() {
-        if (filterLangs.has(tag)) { filterLangs.delete(tag); btn.classList.remove('active'); }
-        else { filterLangs.add(tag); btn.classList.add('active'); }
-        applyFilters();
-      });
-      langContainer.appendChild(btn);
-    });
-  }
+  // Build source multi-select dropdown (OR internally)
+  var sourcesMap={};
+  allEvents.forEach(function(e){ if(e.source) sourcesMap[e.source]=true; });
+  refreshSourceDropdown(Object.keys(sourcesMap).sort());
 
-  // Build source filter dropdown
-  var sources={};
-  allEvents.forEach(function(e){ if(e.source) sources[e.source]=true; });
-  var sSel=document.getElementById('source-filter');
-  Object.keys(sources).sort().forEach(function(s){
-    var o=document.createElement('option'); o.value=s; o.textContent=s; sSel.appendChild(o);
-  });
+  // Build language multi-select dropdown (OR internally)
+  var LANG_ORDER = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Language-Free'];
+  var activeLangs = LANG_ORDER.filter(function(l){ return tags[l]; });
+  refreshLangDropdown(activeLangs, tags);
 
   // Wire tag mode sliding toggle — setTagMode is defined at top level
   var track = document.getElementById('tag-toggle-track');
@@ -963,17 +997,6 @@ function buildFilters() {
   track.addEventListener('click', function() { setTagMode(tagMode==='and'?'or':'and'); applyFilters(); });
   document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); applyFilters(); });
   document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  applyFilters(); });
-
-  // Wire language strip toggle
-  var langToggle = document.getElementById('lang-strip-toggle');
-  var langCaret  = document.getElementById('lang-strip-caret');
-  var langTags   = document.getElementById('lang-strip-tags');
-  if (langToggle) {
-    langToggle.addEventListener('click', function() {
-      var open = langTags.classList.toggle('open');
-      langCaret.classList.toggle('open', open);
-    });
-  }
 
   // Wire SFW toggle
   var sfwTrack = document.getElementById('sfw-toggle-track');
@@ -1001,7 +1024,7 @@ function applyFilters() {
     if(searchQuery&&e.title.toLowerCase().indexOf(searchQuery)===-1&&(e.venue||'').toLowerCase().indexOf(searchQuery)===-1) return false;
     if(filterNeighborhood&&e.neighborhood!==filterNeighborhood) return false;
     if(filterVenues.size>0&&!filterVenues.has(e.venue)) return false;
-    if(filterSource&&e.source!==filterSource) return false;
+    if(filterSources.size>0&&!filterSources.has(e.source)) return false;
     // Price filtering: tags contain 'Free', 'Price Unknown', or neither (= paid/known)
     if(filterPrice==='free'&&(e.tags||[]).indexOf('Free')===-1) return false;
     if(filterPrice==='unknown'&&(e.tags||[]).indexOf('Price Unknown')===-1) return false;
@@ -1184,48 +1207,24 @@ document.getElementById('cal-next').addEventListener('click',function(){calMonth
 document.getElementById('cal-today-btn').addEventListener('click',function(){var t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();renderCalendar();});
 document.getElementById('search-input').addEventListener('input',function(){searchQuery=this.value.toLowerCase().trim();applyFilters();});
 document.getElementById('neighborhood-filter').addEventListener('change',function(){filterNeighborhood=this.value;applyFilters();});
-document.getElementById('source-filter').addEventListener('change',function(){filterSource=this.value;applyFilters();});
+document.getElementById('source-filter').addEventListener('change',function(){// source now multi-select — handled by dropdown});
 document.getElementById('date-from').addEventListener('change',function(){filterFrom=this.value;applyFilters();});
 document.getElementById('date-to').addEventListener('change',function(){filterTo=this.value;applyFilters();});
 document.getElementById('clear-btn').addEventListener('click',function(){
   // Reset state
-  activeTags.clear(); filterLangs.clear();
-  searchQuery=''; filterNeighborhood=''; filterSource=''; filterTo='';
+  activeTags.clear(); filterLangs.clear(); filterSources.clear(); updateSourceTrigger(); updateLangTrigger();
+  searchQuery=''; filterNeighborhood=''; filterTo='';
   filterVenues.clear();
   filterPrice='';
 
-  // Build language tag strip
-  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Language-Free'];
-  var langStrip = document.getElementById('lang-strip-tags');
-  LANG_TAGS.forEach(function(lang) {
-    if (!tags[lang]) return; // only show langs that have events
-    var btn = document.createElement('button');
-    btn.className = 'tag-filter-btn tg-lang';
-    btn.textContent = lang + ' (' + (tags[lang]||0) + ')';
-    btn.dataset.lang = lang;
-    btn.addEventListener('click', function() {
-      if (filterLangs.has(lang)) { filterLangs.delete(lang); btn.classList.remove('active'); }
-      else { filterLangs.add(lang); btn.classList.add('active'); }
-      applyFilters();
-    });
-    langStrip.appendChild(btn);
-  });
 
-  // Wire language collapsible toggle
-  document.getElementById('lang-toggle-btn').addEventListener('click', function() {
-    var strip = document.getElementById('lang-strip-tags');
-    var chevron = document.getElementById('lang-chevron');
-    var isHidden = strip.classList.contains('hidden');
-    strip.classList.toggle('hidden', !isHidden);
-    chevron.classList.toggle('open', isHidden);
-  });
   filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.getElementById('search-input').value='';
   document.getElementById('neighborhood-filter').value='';
-  document.getElementById('source-filter').value='';
+  filterSources.clear(); updateSourceTrigger(); refreshSourceDropdown();
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
@@ -1237,43 +1236,19 @@ document.getElementById('clear-btn').addEventListener('click',function(){
 
 document.getElementById('site-title-btn').addEventListener('click', function() {
   // Clear all filter state
-  activeTags.clear(); filterLangs.clear();
-  searchQuery=''; filterNeighborhood=''; filterSource=''; filterTo='';
+  activeTags.clear(); filterLangs.clear(); filterSources.clear(); updateSourceTrigger(); updateLangTrigger();
+  searchQuery=''; filterNeighborhood=''; filterTo='';
   filterVenues.clear();
   filterPrice='';
 
-  // Build language tag strip
-  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Language-Free'];
-  var langStrip = document.getElementById('lang-strip-tags');
-  LANG_TAGS.forEach(function(lang) {
-    if (!tags[lang]) return; // only show langs that have events
-    var btn = document.createElement('button');
-    btn.className = 'tag-filter-btn tg-lang';
-    btn.textContent = lang + ' (' + (tags[lang]||0) + ')';
-    btn.dataset.lang = lang;
-    btn.addEventListener('click', function() {
-      if (filterLangs.has(lang)) { filterLangs.delete(lang); btn.classList.remove('active'); }
-      else { filterLangs.add(lang); btn.classList.add('active'); }
-      applyFilters();
-    });
-    langStrip.appendChild(btn);
-  });
 
-  // Wire language collapsible toggle
-  document.getElementById('lang-toggle-btn').addEventListener('click', function() {
-    var strip = document.getElementById('lang-strip-tags');
-    var chevron = document.getElementById('lang-chevron');
-    var isHidden = strip.classList.contains('hidden');
-    strip.classList.toggle('hidden', !isHidden);
-    chevron.classList.toggle('open', isHidden);
-  });
   filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.getElementById('search-input').value='';
   document.getElementById('neighborhood-filter').value='';
-  document.getElementById('source-filter').value='';
+  filterSources.clear(); updateSourceTrigger(); refreshSourceDropdown();
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});

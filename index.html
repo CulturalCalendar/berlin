@@ -522,6 +522,24 @@ function fmtFullDate(iso) {
   return new Date(iso+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 }
 // Tag group → color (must match CSS palette)
+// Aggregator / listings domains — sourceUrl pointing to these is NOT the event's own page.
+// Mirrors AGGREGATOR_DOMAINS in 03_CalendarWriter.gs — keep the two lists in sync.
+var AGGREGATOR_DOMAINS = [
+  'siegessaeule.de','tip-berlin.de','the-berliner.com','index-berlin.de',
+  'ra.co','resident-advisor.net','ceecee.cc','we-are-village.com',
+  'berlineventsweekly.com','juliaschneider.de','thenextday.substack.com',
+  'festival-ticker.de','festival-alarm.com','theleftberlin.com',
+  'google.com/maps','vertexaisearch.cloud.google.com',
+];
+function isAggregatorUrl(url) {
+  if (!url) return true;
+  var lower = url.toLowerCase();
+  for (var i = 0; i < AGGREGATOR_DOMAINS.length; i++) {
+    if (lower.indexOf(AGGREGATOR_DOMAINS[i]) !== -1) return true;
+  }
+  return false;
+}
+
 var TAG_DOT_COLORS = {
   'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524','Vernissage':'#f8a524',
   'Concert':'#9b6ee0','Theater':'#9b6ee0','Dance':'#9b6ee0','Opera':'#9b6ee0',
@@ -1170,7 +1188,10 @@ function openModal(e) {
   var links='';
   if(e.officialUrl) links+='<a href="'+esc(e.officialUrl)+'" target="_blank" rel="noopener">Event page ↗</a>';
   if(e.eventUrl&&e.eventUrl!==e.officialUrl) links+='<a href="'+esc(e.eventUrl)+'" target="_blank" rel="noopener">Event listing ↗</a>';
-  if(e.sourceUrl&&e.sourceUrl!==e.eventUrl&&e.sourceUrl!==e.officialUrl) links+='<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Seen in ↗</a>';
+  // Only show "Seen in" when sourceUrl points to an aggregator/listings site —
+  // if it's already the venue's own page, the link above covers it.
+  if(e.sourceUrl&&e.sourceUrl!==e.eventUrl&&e.sourceUrl!==e.officialUrl&&isAggregatorUrl(e.sourceUrl))
+    links+='<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Seen in ↗</a>';
   document.getElementById('modal-links').innerHTML=links;
   document.getElementById('modal-overlay').classList.add('open');
 }

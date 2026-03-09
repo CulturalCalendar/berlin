@@ -195,6 +195,16 @@
   .tag.tg-other      { border-color: #c5447d; color: #c5447d; }
   .tag.tg-community  { border-color: #e8e4a0; color: #e8e4a0; }
   .tag.tg-free       { border-color: #4ade80; color: #4ade80; }
+  /* In light mode, tag text uses dark body color so it reads on off-white background */
+  body.light .tag { color: var(--text); }
+  body.light .tag.tg-visual     { color: var(--text); }
+  body.light .tag.tg-performing { color: var(--text); }
+  body.light .tag.tg-screen     { color: var(--text); }
+  body.light .tag.tg-words      { color: var(--text); }
+  body.light .tag.tg-nightlife  { color: var(--text); }
+  body.light .tag.tg-other      { color: var(--text); }
+  body.light .tag.tg-community  { color: var(--text); }
+  body.light .tag.tg-free       { color: var(--text); }
   .no-results { grid-column: 1/-1; padding: 60px 0; text-align: center; color: var(--muted); }
 
   /* ── Event detail modal ── */
@@ -209,7 +219,7 @@
   .meta-link { color: var(--accent); text-decoration: none; }
   .meta-link:hover { text-decoration: underline; }
   #modal-meta strong { color: var(--text); }
-  #modal-summary { font-size: 14px; line-height: 1.7; color: #ccc; margin-bottom: 14px; }
+  #modal-summary { font-size: 14px; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
   #modal-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; }
   #modal-links { display: flex; flex-wrap: wrap; gap: 8px; }
   #modal-links a { font-size: 12px; color: var(--accent); text-decoration: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 2px; transition: border-color 0.12s; }

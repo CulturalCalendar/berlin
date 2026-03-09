@@ -160,17 +160,17 @@
   .cal-day.today { background: #13102a; }
   .cal-day-num { font-size: 11px; color: var(--muted); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 3px; }
   .cal-day.today .cal-day-num { background: var(--accent); color: #000; font-weight: 500; }
-  .cal-event-pill { display: block; width: 100%; font-size: 11px; line-height: 1.3; padding: 2px 5px; margin-bottom: 2px; border-radius: 2px; background: var(--surface2); border: none; border-left: 2px solid var(--border2); color: var(--text); cursor: pointer; transition: background 0.1s; text-align: left; font-family: 'DM Mono', monospace; overflow: hidden; }
-  .pill-text { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-event-pill { display: flex; align-items: center; gap: 4px; width: 100%; font-size: 11px; line-height: 1.3; padding: 2px 5px; margin-bottom: 2px; border-radius: 2px; background: var(--surface2); border: none; border-left: 2px solid var(--border2); color: var(--text); cursor: pointer; transition: background 0.1s; text-align: left; font-family: 'DM Mono', monospace; overflow: hidden; }
+  .pill-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .cal-event-pill:hover { background: var(--surface3); border-left-color: var(--accent); color: var(--accent); }
   .cal-event-pill.pill-queer { border-left-color: #c084fc; }
   .cal-event-pill.pill-free { border-left-color: #4ade80; }
   .cal-event-pill.pill-festival { border-left-color: #f97316; }
   .cal-event-pill.pill-vernissage { border-left-color: var(--accent2); }
   .cal-event-pill.pill-multi { border-left-style: dashed; }
-  .pill-dots { display: flex; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
-  .pill-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .popup-event-dots { display: flex; gap: 3px; margin-top: 3px; flex-wrap: wrap; }
+  .pill-dots { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; justify-content: center; }
+  .pill-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+  .popup-event-dots { display: flex; flex-direction: column; gap: 2px; justify-content: center; flex-shrink: 0; margin-right: 6px; }
   .cal-more-btn { display: block; width: 100%; font-size: 11px; color: var(--muted2); padding: 1px 5px; margin-top: 1px; background: none; border: none; cursor: pointer; text-align: left; font-family: 'DM Mono', monospace; transition: color 0.1s; }
   .cal-more-btn:hover { color: var(--accent); }
 
@@ -859,7 +859,7 @@ function renderCalendar() {
       var pill=document.createElement('button');
       var cls='cal-event-pill '+pillClass(ev)+(ev.startDate!==ev.endDate?' pill-multi':'');
       pill.className=cls.trim();
-      pill.innerHTML='<span class="pill-text">'+(ev.startTime?esc(ev.startTime)+' ':'')+esc(ev.title)+'</span>'+getTagDots(ev.tags);
+      pill.innerHTML=getTagDots(ev.tags)+'<span class="pill-text">'+(ev.startTime?esc(ev.startTime)+' ':'')+esc(ev.title)+'</span>';
       pill.title=ev.title+(ev.venue?' · '+ev.venue:'');
       pill.addEventListener('click',function(e){e.stopPropagation();openModal(ev);});
       cell.appendChild(pill);
@@ -920,8 +920,7 @@ function openDayPopup(dateStr,events){
   events.forEach(function(ev){
     var row=document.createElement('div'); row.className='popup-event-row';
     var dotHtml=getTagDots(ev.tags).replace('class="pill-dots"','class="popup-event-dots"');
-    row.innerHTML='<div class="popup-event-title">'+esc(ev.title)+'</div>'+
-      '<div class="popup-event-meta">'+(ev.startTime?ev.startTime+' · ':'')+esc(ev.venue||'')+'</div>'+dotHtml;
+    row.innerHTML='<div style="display:flex;align-items:center;gap:6px">'+dotHtml+'<div><div class="popup-event-title">'+esc(ev.title)+'</div><div class="popup-event-meta">'+(ev.startTime?ev.startTime+' · ':'')+esc(ev.venue||'')+'</div></div></div>';
     row.addEventListener('click',function(){closeDayPopup();openModal(ev);});
     list.appendChild(row);
   });

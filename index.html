@@ -146,9 +146,9 @@
   /* ── Calendar view ── */
   #calendar-view { display: none; overflow-x: hidden; width: 100%; }
   .cal-nav { padding: 14px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
-  .cal-nav-btn { background: none; border: 1px solid var(--border2); color: var(--muted); font-size: 14px; width: 28px; height: 28px; border-radius: 3px; cursor: pointer; transition: all 0.12s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .cal-nav-btn { background: none; border: 1px solid var(--border2); color: var(--muted); font-size: 20px; width: 34px; height: 34px; border-radius: 3px; cursor: pointer; transition: all 0.12s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
   .cal-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .cal-month-label { font-family: 'DM Serif Display', serif; font-size: 20px; letter-spacing: -0.01em; }
+  .cal-month-label { font-family: 'DM Serif Display', serif; font-size: 20px; letter-spacing: -0.01em; width: 200px; text-align: center; flex-shrink: 0; }
   .cal-today-btn { background: none; border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 3px; cursor: pointer; transition: all 0.12s; margin-left: auto; flex-shrink: 0; }
   .cal-today-btn:hover { border-color: var(--accent); color: var(--accent); }
   .cal-grid-wrap { padding: 0 20px 32px; width: 100%; box-sizing: border-box; }
@@ -416,7 +416,8 @@ function parseDesc(desc) {
     }
     if (l.startsWith('Price:')) out.price=l.replace('Price:','').trim();
     if (l.startsWith('Tags:')) out.tags=l.replace('Tags:','').trim().split(',').map(function(x){return x.trim();}).filter(Boolean);
-    if (l.startsWith('Source:')) out.source=l.replace('Source:','').trim();
+    if (l.startsWith('Seen in:')) out.source=l.replace('Seen in:','').trim();
+    if (l.startsWith('Source:')) out.source=l.replace('Source:','').trim(); // legacy
     if (l.startsWith('Event:')) out.eventUrl=l.replace('Event:','').trim();
     if (l.startsWith('Official:')) out.officialUrl=l.replace('Official:','').trim();
     if (l.startsWith('http')&&!out.sourceUrl) out.sourceUrl=l.trim();
@@ -817,9 +818,9 @@ function openModal(e) {
   document.getElementById('modal-summary').textContent=e.summary;
   document.getElementById('modal-tags').innerHTML=(e.tags||[]).map(function(t){return '<span class="'+tagClass(t)+'">'+esc(t)+'</span>';}).join('');
   var links='';
-  if(e.officialUrl) links+='<a href="'+esc(e.officialUrl)+'" target="_blank" rel="noopener">Official page ↗</a>';
+  if(e.officialUrl) links+='<a href="'+esc(e.officialUrl)+'" target="_blank" rel="noopener">Event page ↗</a>';
   if(e.eventUrl&&e.eventUrl!==e.officialUrl) links+='<a href="'+esc(e.eventUrl)+'" target="_blank" rel="noopener">Event listing ↗</a>';
-  if(e.sourceUrl&&e.sourceUrl!==e.eventUrl&&e.sourceUrl!==e.officialUrl) links+='<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Source ↗</a>';
+  if(e.sourceUrl&&e.sourceUrl!==e.eventUrl&&e.sourceUrl!==e.officialUrl) links+='<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Seen in ↗</a>';
   document.getElementById('modal-links').innerHTML=links;
   document.getElementById('modal-overlay').classList.add('open');
 }

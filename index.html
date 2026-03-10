@@ -95,11 +95,8 @@
 
   .tag-filter-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
   .tag-filter-btn:hover { border-color: var(--accent); color: var(--text); }
-  .tag-filter-btn.excluded { background: rgba(239,68,68,0.1); border-color: #ef4444; color: #ef4444; text-decoration: line-through; }
-  .not-toggle-wrap { display: flex; align-items: center; gap: 7px; margin-left: 14px; flex-shrink: 0; }
-  .not-toggle-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; letter-spacing: 0.05em; }
-  .not-toggle-btn:hover { border-color: #ef4444; color: #ef4444; }
-  .not-toggle-btn.active { background: rgba(239,68,68,0.12); border-color: #ef4444; color: #ef4444; font-weight: 500; }
+  /* Excluded tag state: shown with red strikethrough. 1st click = include (green), 2nd = exclude (red), 3rd = off */
+  .tag-filter-btn.excluded { background: rgba(239,68,68,0.10); border-color: #ef4444 !important; color: #ef4444 !important; text-decoration: line-through; }
   .tag-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 500; }
   #search-input { width: 180px; }
   /* Venue multi-select */
@@ -393,9 +390,7 @@
       </div>
       <span class="sfw-label" id="sfw-label-on">SFW</span>
     </div>
-    <div class="not-toggle-wrap">
-      <button class="not-toggle-btn" id="not-toggle-btn" title="Exclude selected tags — click tags to hide events that have them">Exclude tags</button>
-    </div>
+
   </div>
   <div class="tag-strip-tags" id="tag-strip-tags"></div>
 </div>
@@ -512,7 +507,6 @@ var filterSources = new Set(); // multi-select, OR
 var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
 var tagMode = 'and'; // 'and' | 'or'
 var sfwMode = false;
-var notMode = false; // when true, clicking a tag excludes it
 var filterLangs = new Set(); // OR between languages, AND with tag filters
 var currentView = "cal";
 var today = new Date();
@@ -723,14 +717,6 @@ function setTagMode(mode) {
     document.getElementById('tag-label-and').classList.add('lit');
     document.getElementById('tag-label-or').classList.remove('lit');
   }
-}
-
-function setNotMode(on) {
-  notMode = on;
-  var btn = document.getElementById('not-toggle-btn');
-  if (!btn) return;
-  btn.classList.toggle('active', on);
-  btn.textContent = on ? '↑ Excluding…' : 'Exclude tags';
 }
 
 function setSfwMode(on, save) {
@@ -1085,17 +1071,24 @@ function buildFilters() {
     btn.className='tag-filter-btn '+grpCls;
     btn.textContent=tag+' ('+(tags[tag]||0)+')'; btn.dataset.tag=tag;
     btn.addEventListener('click',function(){
-      if(notMode){
-        // In NOT mode: toggle exclude
-        if(excludeTags.has(tag)){excludeTags.delete(tag);btn.classList.remove('excluded');}
-        else{excludeTags.add(tag);btn.classList.add('excluded');activeTags.delete(tag);btn.classList.remove('active');}
+      // Triple-state cycle: off → include (green) → exclude (red strikethrough) → off
+      if(activeTags.has(tag)){
+        // Was included → move to excluded
+        activeTags.delete(tag); btn.classList.remove('active');
+        excludeTags.add(tag);   btn.classList.add('excluded');
+        btn.title=tag+' — excluded (click again to deselect)';
+      } else if(excludeTags.has(tag)){
+        // Was excluded → deselect
+        excludeTags.delete(tag); btn.classList.remove('excluded');
+        btn.title=tag+' (click to include, click again to exclude)';
       } else {
-        // Normal mode: toggle include
-        if(activeTags.has(tag)){activeTags.delete(tag);btn.classList.remove('active');}
-        else{activeTags.add(tag);btn.classList.add('active');excludeTags.delete(tag);btn.classList.remove('excluded');}
+        // Was off → include
+        activeTags.add(tag); btn.classList.add('active');
+        btn.title=tag+' — included (click again to exclude)';
       }
       applyFilters();
     });
+    btn.title=tag+' (click to include, click again to exclude)';
     strip.appendChild(btn);
   });
 
@@ -1127,7 +1120,9 @@ function buildFilters() {
   // Wire tag mode sliding toggle — setTagMode is defined at top level
   var track = document.getElementById('tag-toggle-track');
   _tagTrack = track;
-  track.addEventListener('click', function() { setTagMode(tagMode==='and'?'or':'and'); if(tagMode==='and') setNotMode(false); applyFilters(); });
+  track.addEventListener('click', function() { setTagMode(tagMode==='and'?'or':'and'); applyFilters(); });
+  document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); applyFilters(); });
+  document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  applyFilters(); });
 
   // Wire SFW toggle
   var sfwTrack = document.getElementById('sfw-toggle-track');
@@ -1135,19 +1130,6 @@ function buildFilters() {
   document.getElementById('sfw-label-on').addEventListener('click',  function() { setSfwMode(!sfwMode); applyFilters(); });
   document.getElementById('sfw-label-off').addEventListener('click', function() { setSfwMode(!sfwMode); applyFilters(); });
 
-  // Wire NOT/Exclude button
-  var notBtn = document.getElementById('not-toggle-btn');
-  notBtn.addEventListener('click', function() {
-    notMode = !notMode;
-    notBtn.classList.toggle('active', notMode);
-    notBtn.textContent = notMode ? '↑ Excluding…' : 'Exclude tags';
-    // If switching OFF not mode, switching to AND mode auto-deactivates NOT
-    // (no extra logic needed — just toggle state)
-  });
-
-  // When AND/OR toggle is manually changed, deactivate NOT mode
-  document.getElementById('tag-label-and').addEventListener('click', function() { setNotMode(false); setTagMode('and'); applyFilters(); });
-  document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or'); applyFilters(); });
 
   // Wire price buttons
   document.querySelectorAll('.price-btn').forEach(function(btn){
@@ -1407,7 +1389,6 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.tag-filter-btn.excluded').forEach(function(b){b.classList.remove('excluded');});
-  setNotMode(false);
   document.getElementById('search-input').value='';
   refreshNeighDropdown(); updateNeighTrigger();
   refreshSourceDropdown();
@@ -1430,7 +1411,6 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.tag-filter-btn.excluded').forEach(function(b){b.classList.remove('excluded');});
-  setNotMode(false);
   document.getElementById('search-input').value='';
   refreshNeighDropdown(); updateNeighTrigger();
   refreshSourceDropdown();

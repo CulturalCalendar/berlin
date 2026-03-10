@@ -342,7 +342,10 @@
   </div>
   <div class="filter-divider" id="date-divider" style="display:none"></div>
   <div class="filter-group">
-    <select id="neighborhood-filter"><option value="">All neighborhoods</option></select>
+    <div class="venue-filter-wrap" id="neigh-filter-wrap">
+      <button class="venue-filter-trigger" id="neigh-filter-trigger">All neighborhoods ▾</button>
+      <div class="venue-dropdown" id="neigh-dropdown"></div>
+    </div>
     <div class="venue-filter-wrap" id="venue-filter-wrap">
       <button class="venue-filter-trigger" id="venue-filter-trigger">All venues ▾</button>
       <div class="venue-dropdown" id="venue-dropdown"></div>
@@ -492,7 +495,8 @@ var MAX_PILLS   = 5;
 
 var allEvents = [], filteredEvents = [];
 var activeTags = new Set();
-var searchQuery = "", filterNeighborhood = "", filterFrom = "", filterTo = "";
+var searchQuery = "", filterFrom = "", filterTo = "";
+var filterNeighborhoods = new Set(); // multi-select, OR
 var filterVenues  = new Set(); // multi-select, OR
 var filterSources = new Set(); // multi-select, OR
 // filterLangs already declared above
@@ -745,6 +749,51 @@ _themeTrack.addEventListener('click', function() {
 document.getElementById('theme-label-dark').addEventListener('click', function() { setTheme('dark'); });
 document.getElementById('theme-label-light').addEventListener('click', function() { setTheme('light'); });
 
+// ── Neighborhood multi-select dropdown ────────────────────────
+var _neighDropdown = document.getElementById('neigh-dropdown');
+var _neighTrigger  = document.getElementById('neigh-filter-trigger');
+var _allNeighs = [];
+
+function refreshNeighDropdown(neighList) {
+  if (neighList !== undefined) _allNeighs = neighList;
+  if (!_neighDropdown) return;
+  _neighDropdown.innerHTML = '';
+  var hdr = document.createElement('div'); hdr.className='venue-dropdown-header';
+  var lbl = document.createElement('span'); lbl.style.cssText='font-size:11px;color:var(--muted);font-family:DM Mono,monospace;';
+  lbl.textContent = _allNeighs.length + ' neighborhoods';
+  var clr = document.createElement('button'); clr.className='venue-dropdown-clear'; clr.textContent='Clear';
+  clr.addEventListener('click', function(e) { e.stopPropagation(); filterNeighborhoods.clear(); refreshNeighDropdown(); updateNeighTrigger(); applyFilters(); });
+  hdr.appendChild(lbl); hdr.appendChild(clr); _neighDropdown.appendChild(hdr);
+  _allNeighs.forEach(function(nh) {
+    var row = document.createElement('div'); row.className='venue-option';
+    var cb = document.createElement('input'); cb.type='checkbox'; cb.id='nhopt-'+nh;
+    cb.checked = filterNeighborhoods.has(nh);
+    var lbl2 = document.createElement('label'); lbl2.htmlFor='nhopt-'+nh; lbl2.textContent=nh;
+    cb.addEventListener('change', function() {
+      if (cb.checked) filterNeighborhoods.add(nh); else filterNeighborhoods.delete(nh);
+      updateNeighTrigger(); applyFilters();
+    });
+    row.appendChild(cb); row.appendChild(lbl2); _neighDropdown.appendChild(row);
+  });
+}
+
+function updateNeighTrigger() {
+  if (!_neighTrigger) return;
+  var n = filterNeighborhoods.size;
+  _neighTrigger.textContent = n===0 ? 'All neighborhoods ▾' : n+' neighborhood'+(n>1?'s':'')+' ▾';
+  _neighTrigger.classList.toggle('has-selection', n>0);
+}
+
+if (_neighTrigger) {
+  _neighTrigger.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var opening = !_neighDropdown.classList.contains('open');
+    closeAllDropdowns();
+    if (opening) { refreshNeighDropdown(); _neighDropdown.classList.add('open'); }
+  });
+  _neighDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+}
+
 // ── Venue multi-select dropdown ───────────────────────────────
 var _venueDropdown = document.getElementById('venue-dropdown');
 var _venueTrigger  = document.getElementById('venue-filter-trigger');
@@ -754,7 +803,7 @@ function refreshVenueDropdown() {
   // (but ignoring the venue filter itself, so options don't vanish while selecting)
   var eligible = allEvents.filter(function(e) {
     if (searchQuery && e.title.toLowerCase().indexOf(searchQuery)===-1 && (e.venue||'').toLowerCase().indexOf(searchQuery)===-1) return false;
-    if (filterNeighborhood && e.neighborhood !== filterNeighborhood) return false;
+    if (filterNeighborhoods.size>0&&!filterNeighborhoods.has(e.neighborhood)) return false;
     if (filterSources.size>0&&!filterSources.has(e.source)) return false;
     if (filterFrom && e.endDate < filterFrom) return false;
     if (filterTo   && e.startDate > filterTo)  return false;
@@ -811,6 +860,7 @@ _venueTrigger.addEventListener('click', function(e) {
 });
 function closeAllDropdowns() {
   _venueDropdown.classList.remove('open');
+  if (_neighDropdown)  _neighDropdown.classList.remove('open');
   if (_sourceDropdown) _sourceDropdown.classList.remove('open');
   if (_langDropdown)   _langDropdown.classList.remove('open');
 }
@@ -958,8 +1008,8 @@ function buildFilters() {
     if(e.venue) v[e.venue]=true;
     (e.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});
   });
-  var nhSel=document.getElementById('neighborhood-filter');
-  Object.keys(nh).sort().forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;nhSel.appendChild(o);});
+  // Neighborhood dropdown populated via refreshNeighDropdown()
+  refreshNeighDropdown(Object.keys(nh).sort());
   // venue dropdown built dynamically by refreshVenueDropdown()
   var TAG_GROUPS=[
     {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Vernissage','Finissage']},
@@ -1008,7 +1058,13 @@ function buildFilters() {
   // Build source multi-select dropdown (OR internally)
   var sourcesMap={};
   allEvents.forEach(function(e){ if(e.source) sourcesMap[e.source]=true; });
-  refreshSourceDropdown(Object.keys(sourcesMap).sort());
+  var rawSources = Object.keys(sourcesMap);
+  rawSources.sort(function(a,b){
+    var la=(SOURCE_LABELS[a]||a).toLowerCase();
+    var lb=(SOURCE_LABELS[b]||b).toLowerCase();
+    return la<lb?-1:la>lb?1:0;
+  });
+  refreshSourceDropdown(rawSources);
 
   // Build language multi-select dropdown (OR internally)
   var LANG_ORDER = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Language-Free'];
@@ -1046,7 +1102,7 @@ function buildFilters() {
 function applyFilters() {
   filteredEvents=allEvents.filter(function(e){
     if(searchQuery&&e.title.toLowerCase().indexOf(searchQuery)===-1&&(e.venue||'').toLowerCase().indexOf(searchQuery)===-1) return false;
-    if(filterNeighborhood&&e.neighborhood!==filterNeighborhood) return false;
+    if(filterNeighborhoods.size>0&&!filterNeighborhoods.has(e.neighborhood)) return false;
     if(filterVenues.size>0&&!filterVenues.has(e.venue)) return false;
     if(filterSources.size>0&&!filterSources.has(e.source)) return false;
     // Price filtering: tags contain 'Free', 'Price Unknown', or neither (= paid/known)
@@ -1188,10 +1244,13 @@ function openModal(e) {
   var links='';
   if(e.officialUrl) links+='<a href="'+esc(e.officialUrl)+'" target="_blank" rel="noopener">Event page ↗</a>';
   if(e.eventUrl&&e.eventUrl!==e.officialUrl) links+='<a href="'+esc(e.eventUrl)+'" target="_blank" rel="noopener">Event listing ↗</a>';
-  // Only show "Seen in" when sourceUrl points to an aggregator/listings site —
-  // if it's already the venue's own page, the link above covers it.
-  if(e.sourceUrl&&e.sourceUrl!==e.eventUrl&&e.sourceUrl!==e.officialUrl&&isAggregatorUrl(e.sourceUrl))
-    links+='<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Seen in ↗</a>';
+  // Show "Seen in" when sourceUrl is an aggregator/listings site.
+  // If sourceUrl is the venue's own page AND we already have officialUrl/eventUrl, suppress it.
+  // But if no other links exist at all, always show sourceUrl as a fallback.
+  if(e.sourceUrl&&e.sourceUrl!==e.eventUrl&&e.sourceUrl!==e.officialUrl){
+    if(isAggregatorUrl(e.sourceUrl)||!links)
+      links+='<a href="'+esc(e.sourceUrl)+'" target="_blank" rel="noopener">Seen in ↗</a>';
+  }
   document.getElementById('modal-links').innerHTML=links;
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -1233,7 +1292,7 @@ document.getElementById('cal-prev').addEventListener('click',function(){calMonth
 document.getElementById('cal-next').addEventListener('click',function(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 document.getElementById('cal-today-btn').addEventListener('click',function(){var t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();renderCalendar();});
 document.getElementById('search-input').addEventListener('input',function(){searchQuery=this.value.toLowerCase().trim();applyFilters();});
-document.getElementById('neighborhood-filter').addEventListener('change',function(){filterNeighborhood=this.value;applyFilters();});
+// neighborhood filter now uses multi-select dropdown (see refreshNeighDropdown)
 // source-filter select removed — now using multi-select dropdown
 document.getElementById('date-from').addEventListener('change',function(){filterFrom=this.value;applyFilters();});
 document.getElementById('date-to').addEventListener('change',function(){filterTo=this.value;applyFilters();});
@@ -1241,14 +1300,14 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   // Reset state
   activeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger();
-  searchQuery=''; filterNeighborhood=''; filterTo='';
+  searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
   filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.getElementById('search-input').value='';
-  document.getElementById('neighborhood-filter').value='';
+  refreshNeighDropdown(); updateNeighTrigger();
   refreshSourceDropdown();
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
@@ -1262,14 +1321,14 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   // Clear all filter state
   activeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger();
-  searchQuery=''; filterNeighborhood=''; filterTo='';
+  searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
   filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.getElementById('search-input').value='';
-  document.getElementById('neighborhood-filter').value='';
+  refreshNeighDropdown(); updateNeighTrigger();
   refreshSourceDropdown();
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';

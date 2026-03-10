@@ -470,7 +470,7 @@
 
     <h3>Datenschutz (DSGVO)</h3>
     <p>Diese Website erhebt keine personenbezogenen Daten, setzt keine Cookies und verwendet kein Tracking. Es werden keine Nutzerdaten gespeichert oder weitergegeben.</p>
-    <p>Die Website liest Veranstaltungsdaten aus einem öffentlichen Google Calendar über die Google Calendar API. Dabei gelten die <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Datenschutzbestimmungen von Google</a>. Die Theme-Präferenz (hell/dunkel) wird ausschließlich lokal im Browser gespeichert (localStorage) und nicht übertragen.</p>
+    <p>Die Website liest Veranstaltungsdaten aus einem öffentlichen Google Calendar über die Google Calendar API. Dabei gelten die <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Datenschutzbestimmungen von Google</a>. Die Theme-Präferenz (hell/dunkel) und der SFW-Filterstatus werden ausschließlich lokal im Browser gespeichert (localStorage) und nicht übertragen.</p>
     <p>Verantwortliche Stelle im Sinne der DSGVO ist die oben genannte Privatperson.</p>
 
     <h3>Urheberrecht</h3>
@@ -532,7 +532,7 @@ var AGGREGATOR_DOMAINS = [
   'siegessaeule.de','tip-berlin.de','the-berliner.com','index-berlin.de',
   'ra.co','resident-advisor.net','ceecee.cc','we-are-village.com',
   'berlineventsweekly.com','juliaschneider.de','thenextday.substack.com',
-  'festival-ticker.de','festival-alarm.com','theleftberlin.com',
+  'festival-ticker.de','festival-alarm.com','theleftberlin.com','nordischebotschaften.org',
   'google.com/maps','vertexaisearch.cloud.google.com',
 ];
 function isAggregatorUrl(url) {
@@ -702,7 +702,7 @@ function setTagMode(mode) {
   }
 }
 
-function setSfwMode(on) {
+function setSfwMode(on, save) {
   sfwMode = on;
   var track = document.getElementById('sfw-toggle-track');
   var labelOn = document.getElementById('sfw-label-on');
@@ -717,7 +717,17 @@ function setSfwMode(on) {
     labelOn.classList.remove('lit');
     labelOff.classList.add('lit');
   }
+  if (save !== false) {
+    try { localStorage.setItem('bcc-sfw', on ? '1' : '0'); } catch(e) {}
+  }
 }
+// Restore saved SFW preference
+(function() {
+  try {
+    var saved = localStorage.getItem('bcc-sfw');
+    if (saved === '1') setSfwMode(true, false);
+  } catch(e) {}
+})();
 
 // ── Theme toggle ──────────────────────────────────────────────
 var _themeTrack = document.getElementById('theme-toggle-track');
@@ -1055,15 +1065,20 @@ function buildFilters() {
   filterFrom=new Date().toISOString().substring(0,10);
   document.getElementById('date-from').value=filterFrom;
 
-  // Build source multi-select dropdown (OR internally)
+  // Build "Seen in" source filter dropdown — aggregators only (not venues).
+  // Venue-specific sources (Sophiensaele, HAU, etc.) are browseable via the Venue filter.
+  var AGGREGATOR_SOURCE_SET = new Set([
+    'Siegessäule','CeeCee','Index Berlin','Berlin Events Weekly','Julia Schneider',
+    'The Next Day','Resident Advisor','Tip Berlin','The Berliner','We Are Village',
+    'Festival Ticker','Festival Alarm','The Left Berlin','Nordische Botschaften',
+    'Open Day Search','Recurring Free Entry'
+  ]);
   var sourcesMap={};
-  allEvents.forEach(function(e){ if(e.source) sourcesMap[e.source]=true; });
-  var rawSources = Object.keys(sourcesMap);
-  rawSources.sort(function(a,b){
-    var la=(SOURCE_LABELS[a]||a).toLowerCase();
-    var lb=(SOURCE_LABELS[b]||b).toLowerCase();
-    return la<lb?-1:la>lb?1:0;
+  allEvents.forEach(function(e){
+    if(e.source && AGGREGATOR_SOURCE_SET.has(e.source)) sourcesMap[e.source]=true;
   });
+  var rawSources = Object.keys(sourcesMap);
+  rawSources.sort(function(a,b){ return a<b?-1:a>b?1:0; });
   refreshSourceDropdown(rawSources);
 
   // Build language multi-select dropdown (OR internally)
@@ -1242,7 +1257,7 @@ function openModal(e) {
   document.getElementById('modal-summary').textContent=e.summary;
   document.getElementById('modal-tags').innerHTML=(e.tags||[]).filter(function(t){return t!=='Price Unknown'&&t!=='Explicit';}).map(function(t){return '<span class="'+tagClass(t)+'">'+esc(t)+'</span>';}).join('');
   var links='';
-  if(e.officialUrl) links+='<a href="'+esc(e.officialUrl)+'" target="_blank" rel="noopener">Event page ↗</a>';
+  if(e.officialUrl) links+='<a href="'+esc(e.officialUrl)+'" target="_blank" rel="noopener">Website ↗</a>';
   if(e.eventUrl&&e.eventUrl!==e.officialUrl) links+='<a href="'+esc(e.eventUrl)+'" target="_blank" rel="noopener">Event listing ↗</a>';
   // Show "Seen in" when sourceUrl is an aggregator/listings site.
   // If sourceUrl is the venue's own page AND we already have officialUrl/eventUrl, suppress it.

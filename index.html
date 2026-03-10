@@ -95,6 +95,11 @@
 
   .tag-filter-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
   .tag-filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tag-filter-btn.excluded { background: rgba(239,68,68,0.1); border-color: #ef4444; color: #ef4444; text-decoration: line-through; }
+  .not-toggle-wrap { display: flex; align-items: center; gap: 7px; margin-left: 14px; flex-shrink: 0; }
+  .not-toggle-btn { background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.12s; letter-spacing: 0.05em; }
+  .not-toggle-btn:hover { border-color: #ef4444; color: #ef4444; }
+  .not-toggle-btn.active { background: rgba(239,68,68,0.12); border-color: #ef4444; color: #ef4444; font-weight: 500; }
   .tag-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 500; }
   #search-input { width: 180px; }
   /* Venue multi-select */
@@ -388,6 +393,9 @@
       </div>
       <span class="sfw-label" id="sfw-label-on">SFW</span>
     </div>
+    <div class="not-toggle-wrap">
+      <button class="not-toggle-btn" id="not-toggle-btn" title="Exclude selected tags — click tags to hide events that have them">Exclude tags</button>
+    </div>
   </div>
   <div class="tag-strip-tags" id="tag-strip-tags"></div>
 </div>
@@ -495,6 +503,7 @@ var MAX_PILLS   = 5;
 
 var allEvents = [], filteredEvents = [];
 var activeTags = new Set();
+var excludeTags = new Set(); // NOT filter — tags to exclude
 var searchQuery = "", filterFrom = "", filterTo = "";
 var filterNeighborhoods = new Set(); // multi-select, OR
 var filterVenues  = new Set(); // multi-select, OR
@@ -503,6 +512,7 @@ var filterSources = new Set(); // multi-select, OR
 var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
 var tagMode = 'and'; // 'and' | 'or'
 var sfwMode = false;
+var notMode = false; // when true, clicking a tag excludes it
 var filterLangs = new Set(); // OR between languages, AND with tag filters
 var currentView = "cal";
 var today = new Date();
@@ -554,7 +564,9 @@ var TAG_DOT_COLORS = {
   'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Drag':'#e8e4a0',
   'Free':'#4ade80',
   'Finissage':'#f8a524',
-  'Indoor':'#6366f1','Outdoor':'#6366f1',
+  'Indoor':'#6366f1','Outdoor':'#6366f1','Online':'#6366f1',
+  'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524',
+  'Family':'#e8e4a0','History':'#c5447d',
 };
 
 // Calendar pill: only show green dot for Free events
@@ -581,8 +593,11 @@ function getPopupDots(tags) {
 }
 
 // Return array of unique tag-group colors for the pill bar (excl. Free, Indoor/Outdoor, language)
-var PILL_EXCLUDE = new Set(['Free','Indoor','Outdoor',
-  'German','English','French','Spanish','Italian','Polish','Japanese','Korean','Language-Free']);
+var PILL_EXCLUDE = new Set(['Free','Indoor','Outdoor','Online',
+  'German','English','French','Spanish','Italian','Polish','Japanese','Korean',
+  'Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish',
+  'Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese',
+  'Language-Free']);
 function pillColors(tags) {
   var seen = {}, cols = [];
   (tags||[]).forEach(function(t) {
@@ -604,9 +619,15 @@ var TAG_CLASS_MAP = {
   'Queer':'tg-community','Sexuality':'tg-community','Drag':'tg-community',
   'Free':'tg-free',
   'Finissage':'tg-visual',
-  'Indoor':'tg-place','Outdoor':'tg-place',
+  'Indoor':'tg-place','Outdoor':'tg-place','Online':'tg-place',
+  'Sculpture':'tg-visual','Installation':'tg-visual','Open Studio':'tg-visual',
+  'Family':'tg-community','History':'tg-other',
   'German':'tg-language','English':'tg-language','French':'tg-language','Spanish':'tg-language',
   'Italian':'tg-language','Polish':'tg-language','Japanese':'tg-language','Korean':'tg-language',
+  'Arabic':'tg-language','Turkish':'tg-language','Russian':'tg-language','Hebrew':'tg-language',
+  'Portuguese':'tg-language','Dutch':'tg-language','Swedish':'tg-language','Danish':'tg-language',
+  'Norwegian':'tg-language','Finnish':'tg-language','Greek':'tg-language','Ukrainian':'tg-language',
+  'Romanian':'tg-language','Hungarian':'tg-language','Czech':'tg-language','Chinese':'tg-language',
   'Language-Free':'tg-language',
 };
 function tagClass(t) {
@@ -687,6 +708,8 @@ function normalizeSourceLabel(raw) {
 }
 // ── hoisted so clear-btn can call it before buildFilters runs ──
 var _tagTrack = null;
+var _popupOpenBeforeModal = false;
+var _popupEvent = null;
 function setTagMode(mode) {
   tagMode = mode;
   if (!_tagTrack) _tagTrack = document.getElementById('tag-toggle-track');
@@ -700,6 +723,14 @@ function setTagMode(mode) {
     document.getElementById('tag-label-and').classList.add('lit');
     document.getElementById('tag-label-or').classList.remove('lit');
   }
+}
+
+function setNotMode(on) {
+  notMode = on;
+  var btn = document.getElementById('not-toggle-btn');
+  if (!btn) return;
+  btn.classList.toggle('active', on);
+  btn.textContent = on ? '↑ Excluding…' : 'Exclude tags';
 }
 
 function setSfwMode(on, save) {
@@ -1022,16 +1053,16 @@ function buildFilters() {
   refreshNeighDropdown(Object.keys(nh).sort());
   // venue dropdown built dynamically by refreshVenueDropdown()
   var TAG_GROUPS=[
-    {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Vernissage','Finissage']},
+    {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Open Studio','Vernissage','Finissage']},
     {cls:'tg-performing', tags:['Concert','Theater','Dance','Opera']},
     {cls:'tg-screen',     tags:['Film','Cinema']},
     {cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
     {cls:'tg-nightlife',  tags:['Techno','Party','Festival','Comedy']},
-    {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food','Protest']},
-    {cls:'tg-community',  tags:['Queer','Sexuality','Drag']},
-    {cls:'tg-place',      tags:['Indoor','Outdoor']},
+    {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food','Protest','History']},
+    {cls:'tg-community',  tags:['Queer','Sexuality','Drag','Family']},
+    {cls:'tg-place',      tags:['Indoor','Outdoor','Online']},
   ];
-  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Language-Free'];
+  var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
   // Build lookup: tag → group class
   var tagGroupMap={};
   TAG_GROUPS.forEach(function(g){g.tags.forEach(function(t){tagGroupMap[t]=g.cls;});});
@@ -1054,8 +1085,15 @@ function buildFilters() {
     btn.className='tag-filter-btn '+grpCls;
     btn.textContent=tag+' ('+(tags[tag]||0)+')'; btn.dataset.tag=tag;
     btn.addEventListener('click',function(){
-      if(activeTags.has(tag)){activeTags.delete(tag);btn.classList.remove('active');}
-      else{activeTags.add(tag);btn.classList.add('active');}
+      if(notMode){
+        // In NOT mode: toggle exclude
+        if(excludeTags.has(tag)){excludeTags.delete(tag);btn.classList.remove('excluded');}
+        else{excludeTags.add(tag);btn.classList.add('excluded');activeTags.delete(tag);btn.classList.remove('active');}
+      } else {
+        // Normal mode: toggle include
+        if(activeTags.has(tag)){activeTags.delete(tag);btn.classList.remove('active');}
+        else{activeTags.add(tag);btn.classList.add('active');excludeTags.delete(tag);btn.classList.remove('excluded');}
+      }
       applyFilters();
     });
     strip.appendChild(btn);
@@ -1071,7 +1109,7 @@ function buildFilters() {
     'Siegessäule','CeeCee','Index Berlin','Berlin Events Weekly','Julia Schneider',
     'The Next Day','Resident Advisor','Tip Berlin','The Berliner','We Are Village',
     'Festival Ticker','Festival Alarm','The Left Berlin','Nordische Botschaften',
-    'Open Day Search','Recurring Free Entry'
+    'Open Door Days','Regular Free Entry'
   ]);
   var sourcesMap={};
   allEvents.forEach(function(e){
@@ -1082,22 +1120,34 @@ function buildFilters() {
   refreshSourceDropdown(rawSources);
 
   // Build language multi-select dropdown (OR internally)
-  var LANG_ORDER = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Language-Free'];
+  var LANG_ORDER = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
   var activeLangs = LANG_ORDER.filter(function(l){ return tags[l]; });
   refreshLangDropdown(activeLangs, tags);
 
   // Wire tag mode sliding toggle — setTagMode is defined at top level
   var track = document.getElementById('tag-toggle-track');
   _tagTrack = track;
-  track.addEventListener('click', function() { setTagMode(tagMode==='and'?'or':'and'); applyFilters(); });
-  document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); applyFilters(); });
-  document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  applyFilters(); });
+  track.addEventListener('click', function() { setTagMode(tagMode==='and'?'or':'and'); if(tagMode==='and') setNotMode(false); applyFilters(); });
 
   // Wire SFW toggle
   var sfwTrack = document.getElementById('sfw-toggle-track');
   sfwTrack.addEventListener('click', function() { setSfwMode(!sfwMode); applyFilters(); });
   document.getElementById('sfw-label-on').addEventListener('click',  function() { setSfwMode(!sfwMode); applyFilters(); });
   document.getElementById('sfw-label-off').addEventListener('click', function() { setSfwMode(!sfwMode); applyFilters(); });
+
+  // Wire NOT/Exclude button
+  var notBtn = document.getElementById('not-toggle-btn');
+  notBtn.addEventListener('click', function() {
+    notMode = !notMode;
+    notBtn.classList.toggle('active', notMode);
+    notBtn.textContent = notMode ? '↑ Excluding…' : 'Exclude tags';
+    // If switching OFF not mode, switching to AND mode auto-deactivates NOT
+    // (no extra logic needed — just toggle state)
+  });
+
+  // When AND/OR toggle is manually changed, deactivate NOT mode
+  document.getElementById('tag-label-and').addEventListener('click', function() { setNotMode(false); setTagMode('and'); applyFilters(); });
+  document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or'); applyFilters(); });
 
   // Wire price buttons
   document.querySelectorAll('.price-btn').forEach(function(btn){
@@ -1112,6 +1162,28 @@ function buildFilters() {
       applyFilters();
     });
   });
+}
+
+// Jump calendar to the earliest month that has a matching event,
+// but only if the current month has no matching events.
+function jumpCalToFirstMatchingMonth() {
+  if(currentView!=='cal'||filteredEvents.length===0) return;
+  // Check if current month already has events
+  var hasCurrent=filteredEvents.some(function(e){
+    var sd=new Date(e.startDate+'T12:00:00'), ed=new Date(e.endDate+'T12:00:00');
+    // Does the event span any day in calYear/calMonth?
+    var mStart=new Date(calYear,calMonth,1), mEnd=new Date(calYear,calMonth+1,0);
+    return sd<=mEnd && ed>=mStart;
+  });
+  if(hasCurrent) return; // already on a good month
+  // Find earliest event after today
+  var today=new Date(); today.setHours(0,0,0,0);
+  var earliest=null;
+  filteredEvents.forEach(function(e){
+    var d=new Date(e.startDate+'T12:00:00');
+    if(d>=today && (!earliest||d<earliest)) earliest=d;
+  });
+  if(earliest) { calYear=earliest.getFullYear(); calMonth=earliest.getMonth(); }
 }
 
 function applyFilters() {
@@ -1145,11 +1217,17 @@ function applyFilters() {
         var any=false;activeTags.forEach(function(t){if(et.indexOf(t)!==-1)any=true;});if(!any)return false;
       }
     }
+    // NOT/Exclude filter: hide events that have ANY excluded tag (OR logic)
+    if(excludeTags.size>0){
+      var et2x=e.tags||[];
+      var hasExcluded=false;excludeTags.forEach(function(t){if(et2x.indexOf(t)!==-1)hasExcluded=true;});
+      if(hasExcluded) return false;
+    }
     return true;
   });
   document.getElementById('event-count').textContent=filteredEvents.length;
   refreshVenueDropdown();
-  if(currentView==='cal') renderCalendar();
+  if(currentView==='cal') { jumpCalToFirstMatchingMonth(); renderCalendar(); }
   else renderCards();
 }
 
@@ -1269,9 +1347,16 @@ function openModal(e) {
   document.getElementById('modal-links').innerHTML=links;
   document.getElementById('modal-overlay').classList.add('open');
 }
-function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  if(_popupOpenBeforeModal&&_popupEvent){
+    _popupOpenBeforeModal=false;
+    openDayPopup(_popupEvent.dateStr,_popupEvent.events);
+  }
+}
 
 function openDayPopup(dateStr,events){
+  _popupEvent={dateStr:dateStr,events:events};
   document.getElementById('day-popup-date').textContent=fmtFullDate(dateStr);
   var list=document.getElementById('day-popup-list'); list.innerHTML='';
   // Sort: timed events first (chronological), then all-day events (alphabetical)
@@ -1291,12 +1376,12 @@ function openDayPopup(dateStr,events){
     var row=document.createElement('div'); row.className='popup-event-row';
     var dotHtml=getPopupDots(ev.tags).replace('class="pill-dots"','class="popup-event-dots"');
     row.innerHTML='<div style="display:flex;align-items:center;gap:6px">'+dotHtml+'<div><div class="popup-event-title">'+esc(ev.title)+'</div><div class="popup-event-meta">'+(ev.startTime?ev.startTime+' · ':'')+esc(ev.venue||'')+'</div></div></div>';
-    row.addEventListener('click',function(){closeDayPopup();openModal(ev);});
+    row.addEventListener('click',function(){_popupOpenBeforeModal=true;closeDayPopup();openModal(ev);});
     list.appendChild(row);
   }); // sorted.forEach
   document.getElementById('day-popup-overlay').classList.add('open');
 }
-function closeDayPopup(){document.getElementById('day-popup-overlay').classList.remove('open');}
+function closeDayPopup(){document.getElementById('day-popup-overlay').classList.remove('open');_popupOpenBeforeModal=false;}
 
 document.getElementById('modal-close').addEventListener('click',closeModal);
 document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
@@ -1313,7 +1398,7 @@ document.getElementById('date-from').addEventListener('change',function(){filter
 document.getElementById('date-to').addEventListener('change',function(){filterTo=this.value;applyFilters();});
 document.getElementById('clear-btn').addEventListener('click',function(){
   // Reset state
-  activeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
+  activeTags.clear(); excludeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
@@ -1321,6 +1406,8 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   tagMode='and';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.tag-filter-btn.excluded').forEach(function(b){b.classList.remove('excluded');});
+  setNotMode(false);
   document.getElementById('search-input').value='';
   refreshNeighDropdown(); updateNeighTrigger();
   refreshSourceDropdown();
@@ -1334,7 +1421,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
 
 document.getElementById('site-title-btn').addEventListener('click', function() {
   // Clear all filter state
-  activeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
+  activeTags.clear(); excludeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
@@ -1342,6 +1429,8 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   tagMode='and';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.tag-filter-btn.excluded').forEach(function(b){b.classList.remove('excluded');});
+  setNotMode(false);
   document.getElementById('search-input').value='';
   refreshNeighDropdown(); updateNeighTrigger();
   refreshSourceDropdown();

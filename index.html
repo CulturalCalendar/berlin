@@ -140,7 +140,14 @@
   }
   .tag-group-btn:first-child { margin-left: 0; }
   .tag-group-btn:hover { border-color: var(--accent); color: var(--text); }
-  .tag-group-btn.grp-active { border-color: var(--accent2); color: var(--accent2); background: rgba(244,114,182,0.08); font-weight: 500; }
+  .tag-group-btn.grp-active { font-weight: 500; }
+  .tag-group-btn.grp-active.tg-visual     { border-color: #f8a524; color: #f8a524; background: rgba(248,165,36,0.12); }
+  .tag-group-btn.grp-active.tg-performing { border-color: #9b6ee0; color: #9b6ee0; background: rgba(155,110,224,0.15); }
+  .tag-group-btn.grp-active.tg-screen     { border-color: #e0603e; color: #e0603e; background: rgba(224,96,62,0.14); }
+  .tag-group-btn.grp-active.tg-words      { border-color: #a233a1; color: #a233a1; background: rgba(162,51,161,0.16); }
+  .tag-group-btn.grp-active.tg-nightlife  { border-color: #f9d162; color: #f9d162; background: rgba(249,209,98,0.10); }
+  .tag-group-btn.grp-active.tg-other      { border-color: #c5447d; color: #c5447d; background: rgba(197,68,125,0.14); }
+  .tag-group-btn.grp-active.tg-community  { border-color: #e8e4a0; color: #e8e4a0; background: rgba(232,228,160,0.08); }
   /* Anchor wrapper: keeps the group btn and the first tag on the same flex line */
   .tag-group-anchor { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
   .tag-mode-wrap { display: flex; align-items: center; gap: 7px; margin-left: 6px; flex-shrink: 0; }
@@ -312,6 +319,19 @@
   .info-box a:hover { text-decoration: underline; }
   .info-box em { color: var(--muted); font-style: italic; }
 
+
+  /* ── Hover tooltips ── */
+  .ui-tooltip {
+    position: fixed; z-index: 9999;
+    background: var(--surface3); border: 1px solid var(--border2);
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 11px;
+    line-height: 1.55; padding: 7px 10px; border-radius: 4px;
+    max-width: 220px; pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .ui-tooltip.visible { opacity: 1; }
+  body.light .ui-tooltip { background: #fff; border-color: #ccc; color: #222; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
 
   @media (max-width: 700px) {
     header, #filters, #tag-strip, .cal-nav { padding-left: 12px; padding-right: 12px; }
@@ -583,8 +603,7 @@ function isAggregatorUrl(url) {
 var TAG_DOT_COLORS = {
   'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524',
   'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524','Vernissage':'#f8a524','Finissage':'#f8a524',
-  'Concert':'#9b6ee0','Theater':'#9b6ee0','Dance':'#9b6ee0','Opera':'#9b6ee0','Performance':'#9b6ee0',
-  'Film':'#e0603e','Cinema':'#e0603e',
+  'Concert':'#9b6ee0','Theater':'#9b6ee0','Dance':'#9b6ee0','Opera':'#9b6ee0','Performance':'#9b6ee0','Film':'#9b6ee0',
   'Literature':'#a233a1','Talk':'#a233a1','Poetry':'#a233a1','Book Club':'#a233a1',
   'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162','Drag':'#f9d162',
   'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d','History':'#c5447d',
@@ -636,8 +655,7 @@ function pillColors(tags) {
 var TAG_CLASS_MAP = {
   'Exhibition':'tg-visual','Art':'tg-visual','Photography':'tg-visual','Painting':'tg-visual',
   'Sculpture':'tg-visual','Installation':'tg-visual','Open Studio':'tg-visual','Vernissage':'tg-visual','Finissage':'tg-visual',
-  'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing','Performance':'tg-performing',
-  'Film':'tg-screen','Cinema':'tg-screen',
+  'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing','Performance':'tg-performing','Film':'tg-performing',
   'Literature':'tg-words','Talk':'tg-words','Poetry':'tg-words','Book Club':'tg-words',
   'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife','Drag':'tg-nightlife',
   'Workshop':'tg-other','Market':'tg-other','Open Door Day':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other','History':'tg-other',
@@ -1024,32 +1042,36 @@ var PLACE_TYPE_TAGS = ['Indoor', 'Outdoor', 'Online'];
 
 function refreshPlaceDropdown() {
   var _placeDropdown = document.getElementById('place-dropdown');
-  var _placeTrigger  = document.getElementById('place-filter-trigger');
   if (!_placeDropdown) return;
   _placeDropdown.innerHTML = '';
+  var hdr = document.createElement('div'); hdr.className='venue-dropdown-header';
+  var lbl = document.createElement('span'); lbl.style.cssText='font-size:11px;color:var(--muted);font-family:DM Mono,monospace;';
+  lbl.textContent = 'Venue type';
+  var clr = document.createElement('button'); clr.className='venue-dropdown-clear'; clr.textContent='Clear';
+  clr.addEventListener('click', function(e) { e.stopPropagation(); filterPlaceTypes.clear(); refreshPlaceDropdown(); updatePlaceTrigger(); applyFilters(); });
+  hdr.appendChild(lbl); hdr.appendChild(clr); _placeDropdown.appendChild(hdr);
   PLACE_TYPE_TAGS.forEach(function(pt) {
-    var row = document.createElement('div');
-    row.className = 'venue-row' + (filterPlaceTypes.has(pt) ? ' selected' : '');
-    row.textContent = pt;
+    var row = document.createElement('div'); row.className='venue-option';
+    var cb = document.createElement('input'); cb.type='checkbox'; cb.id='ptopt-'+pt;
+    cb.checked = filterPlaceTypes.has(pt);
+    var lbl2 = document.createElement('label'); lbl2.htmlFor='ptopt-'+pt; lbl2.textContent=pt;
     row.addEventListener('click', function(e) {
       e.stopPropagation();
-      if (filterPlaceTypes.has(pt)) filterPlaceTypes.delete(pt);
-      else filterPlaceTypes.add(pt);
-      refreshPlaceDropdown();
-      updatePlaceTrigger();
-      applyFilters();
+      if (filterPlaceTypes.has(pt)) { filterPlaceTypes.delete(pt); cb.checked=false; }
+      else { filterPlaceTypes.add(pt); cb.checked=true; }
+      updatePlaceTrigger(); applyFilters();
     });
-    _placeDropdown.appendChild(row);
+    cb.addEventListener('click', function(e) { e.stopPropagation(); });
+    row.appendChild(cb); row.appendChild(lbl2); _placeDropdown.appendChild(row);
   });
 }
 
 function updatePlaceTrigger() {
   var _placeTrigger = document.getElementById('place-filter-trigger');
   if (!_placeTrigger) return;
-  _placeTrigger.textContent = filterPlaceTypes.size > 0
-    ? Array.from(filterPlaceTypes).join(', ') + ' ▾'
-    : 'Venue type ▾';
-  _placeTrigger.classList.toggle('active', filterPlaceTypes.size > 0);
+  var n = filterPlaceTypes.size;
+  _placeTrigger.textContent = n===0 ? 'Venue type ▾' : n+' type'+(n>1?'s':'')+' ▾';
+  _placeTrigger.classList.toggle('has-selection', n>0);
 }
 
 function updateLangTrigger() {
@@ -1080,6 +1102,80 @@ if (_placeTrigger2) {
   });
   _placeDropdown2.addEventListener('click', function(e) { e.stopPropagation(); });
 }
+
+// ── Hover tooltips ───────────────────────────────────────────────
+(function() {
+  var tip = document.createElement('div');
+  tip.className = 'ui-tooltip';
+  document.body.appendChild(tip);
+
+  var _timer = null;
+  var DELAY = 700; // ms before tooltip appears
+
+  var TIPS = [
+    { id: 'tag-toggle-track',
+      text: 'AND: show events that match ALL selected tags.\nOR: show events that match ANY selected tag.' },
+    { id: 'not-btn',
+      text: 'NOT mode: the next tag you click will be excluded — events with that tag are hidden.' },
+    { id: 'sfw-toggle-track',
+      text: 'Safe For Work: hide events tagged as explicit (sex parties, cruising nights, etc.).' },
+    { id: 'clear-btn',
+      text: 'Clear all active filters and return to the default view.' },
+    { id: 'neigh-filter-trigger',
+      text: 'Filter events by Berlin neighborhood (Bezirk / Kiez).' },
+    { id: 'venue-filter-trigger',
+      text: 'Filter events by specific venue.' },
+    { id: 'place-filter-trigger',
+      text: 'Filter by Indoor, Outdoor, or Online events.' },
+    { id: 'source-filter-trigger',
+      text: 'Filter by the publication or website where an event was found.' },
+    { id: 'lang-filter-trigger',
+      text: 'Filter events by the language they are held in.' },
+  ];
+
+  function showTip(text, el) {
+    tip.textContent = text;
+    tip.style.whiteSpace = 'pre-line';
+    var rect = el.getBoundingClientRect();
+    var top = rect.bottom + 6;
+    var left = rect.left;
+    // Clamp to viewport
+    tip.style.left = '0px'; tip.style.top = '-999px'; tip.style.display = 'block';
+    var tw = tip.offsetWidth;
+    if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+    if (left < 8) left = 8;
+    // If would go below viewport, show above instead
+    if (top + tip.offsetHeight > window.innerHeight - 8) top = rect.top - tip.offsetHeight - 6;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    tip.classList.add('visible');
+  }
+
+  function hideTip() {
+    clearTimeout(_timer);
+    tip.classList.remove('visible');
+  }
+
+  TIPS.forEach(function(t) {
+    var el = document.getElementById(t.id);
+    if (!el) return;
+    el.addEventListener('mouseenter', function() {
+      clearTimeout(_timer);
+      _timer = setTimeout(function() { showTip(t.text, el); }, DELAY);
+    });
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('click', hideTip);
+  });
+
+  // Also hide if mouse moves far away
+  document.addEventListener('mousemove', function(e) {
+    if (!tip.classList.contains('visible')) return;
+    var r = tip.getBoundingClientRect();
+    var dx = Math.max(r.left - e.clientX, e.clientX - r.right, 0);
+    var dy = Math.max(r.top - e.clientY, e.clientY - r.bottom, 0);
+    if (dx > 60 || dy > 60) hideTip();
+  });
+})();
 
 function loadCalendar() {
   var now=new Date(), fut=new Date(now); fut.setMonth(fut.getMonth()+9);
@@ -1138,8 +1234,7 @@ function buildFilters() {
   refreshPlaceDropdown();
   var TAG_GROUPS=[
     {label:'Art & Visual',  cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Open Studio','Vernissage','Finissage']},
-    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera']},
-    {label:'Screen',        cls:'tg-screen',     tags:['Film','Cinema']},
+    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera','Film']},
     {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club']},
     {label:'Nightlife',     cls:'tg-nightlife',  tags:['Party','Techno','Festival','Drag','Comedy']},
     {label:'Events',        cls:'tg-other',      tags:['Workshop','Guided Tour','Market','Food','History','Open Door Day','Protest']},
@@ -1195,7 +1290,7 @@ function buildFilters() {
       if (_lastGrpCls !== null) anchor.style.marginLeft = '8px';
 
       var grpBtn = document.createElement('button');
-      grpBtn.className = 'tag-group-btn';
+      grpBtn.className = 'tag-group-btn ' + grpCls;
       grpBtn.textContent = _grp.label;
       grpBtn.dataset.grpcls = grpCls;
       _grpBtns[grpCls] = grpBtn;
@@ -1617,6 +1712,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.tag-filter-btn.excluded').forEach(function(b){b.classList.remove('excluded');});
+  document.querySelectorAll('.tag-group-btn.grp-active').forEach(function(b){b.classList.remove('grp-active');});
   setNotMode(false);
   document.getElementById('search-input').value='';
   refreshNeighDropdown(); updateNeighTrigger();
@@ -1640,6 +1736,7 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.tag-filter-btn.excluded').forEach(function(b){b.classList.remove('excluded');});
+  document.querySelectorAll('.tag-group-btn.grp-active').forEach(function(b){b.classList.remove('grp-active');});
   setNotMode(false);
   document.getElementById('search-input').value='';
   refreshNeighDropdown(); updateNeighTrigger();

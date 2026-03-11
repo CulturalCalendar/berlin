@@ -911,9 +911,11 @@ _venueTrigger.addEventListener('click', function(e) {
 });
 function closeAllDropdowns() {
   _venueDropdown.classList.remove('open');
-  if (_neighDropdown)  _neighDropdown.classList.remove('open');
-  if (_sourceDropdown) _sourceDropdown.classList.remove('open');
-  if (_langDropdown)   _langDropdown.classList.remove('open');
+  if (_neighDropdown)   _neighDropdown.classList.remove('open');
+  if (_sourceDropdown)  _sourceDropdown.classList.remove('open');
+  if (_langDropdown)    _langDropdown.classList.remove('open');
+  var pd = document.getElementById('place-dropdown');
+  if (pd) pd.classList.remove('open');
 }
 document.addEventListener('click', closeAllDropdowns);
 _venueDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
@@ -996,32 +998,42 @@ var PLACE_TYPE_TAGS = ['Indoor', 'Outdoor', 'Online'];
 
 function refreshPlaceDropdown() {
   var _placeDropdown = document.getElementById('place-dropdown');
-  var _placeTrigger  = document.getElementById('place-filter-trigger');
   if (!_placeDropdown) return;
   _placeDropdown.innerHTML = '';
+  var hdr = document.createElement('div'); hdr.className = 'venue-dropdown-header';
+  var lbl = document.createElement('span'); lbl.style.cssText = 'font-size:11px;color:var(--muted);font-family:DM Mono,monospace;';
+  lbl.textContent = 'Venue type';
+  var clr = document.createElement('button'); clr.className = 'venue-dropdown-clear'; clr.textContent = 'Clear';
+  clr.addEventListener('click', function(e) {
+    e.stopPropagation();
+    filterPlaceTypes.clear();
+    refreshPlaceDropdown();
+    updatePlaceTrigger();
+    applyFilters();
+  });
+  hdr.appendChild(lbl); hdr.appendChild(clr); _placeDropdown.appendChild(hdr);
   PLACE_TYPE_TAGS.forEach(function(pt) {
-    var row = document.createElement('div');
-    row.className = 'venue-row' + (filterPlaceTypes.has(pt) ? ' selected' : '');
-    row.textContent = pt;
-    row.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (filterPlaceTypes.has(pt)) filterPlaceTypes.delete(pt);
-      else filterPlaceTypes.add(pt);
-      refreshPlaceDropdown();
+    var row = document.createElement('div'); row.className = 'venue-option';
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = 'ptopt-' + pt;
+    cb.checked = filterPlaceTypes.has(pt);
+    var lbl2 = document.createElement('label'); lbl2.htmlFor = 'ptopt-' + pt; lbl2.textContent = pt;
+    cb.addEventListener('change', function() {
+      if (cb.checked) filterPlaceTypes.add(pt); else filterPlaceTypes.delete(pt);
       updatePlaceTrigger();
       applyFilters();
     });
-    _placeDropdown.appendChild(row);
+    row.appendChild(cb); row.appendChild(lbl2); _placeDropdown.appendChild(row);
   });
 }
 
 function updatePlaceTrigger() {
   var _placeTrigger = document.getElementById('place-filter-trigger');
   if (!_placeTrigger) return;
-  _placeTrigger.textContent = filterPlaceTypes.size > 0
-    ? Array.from(filterPlaceTypes).join(', ') + ' ▾'
-    : 'Venue type ▾';
-  _placeTrigger.classList.toggle('active', filterPlaceTypes.size > 0);
+  var n = filterPlaceTypes.size;
+  _placeTrigger.textContent = n === 0
+    ? 'Venue type ▾'
+    : Array.from(filterPlaceTypes).join(', ') + ' ▾';
+  _placeTrigger.classList.toggle('has-selection', n > 0);
 }
 
 function updateLangTrigger() {
@@ -1177,8 +1189,14 @@ function buildFilters() {
   });
 
 
-  filterFrom=new Date().toISOString().substring(0,10);
-  document.getElementById('date-from').value=filterFrom;
+  // Show events whose endDate is from the start of last month forward.
+  // (The GAS backend only creates events with endDate >= today - LOOKBACK_DAYS,
+  //  so events more than a month old won't be in the calendar anyway.)
+  var _lastMonthStart = new Date();
+  _lastMonthStart.setDate(1);
+  _lastMonthStart.setMonth(_lastMonthStart.getMonth() - 1);
+  filterFrom = _lastMonthStart.toISOString().substring(0, 10);
+  document.getElementById('date-from').value = filterFrom;
 
   // Build "Seen in" source filter dropdown — aggregators only (not venues).
   // Venue-specific sources (Sophiensaele, HAU, etc.) are browseable via the Venue filter.
@@ -1496,7 +1514,8 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
-  filterFrom=new Date().toISOString().substring(0,10);
+  var _cf1 = new Date(); _cf1.setDate(1); _cf1.setMonth(_cf1.getMonth()-1);
+  filterFrom = _cf1.toISOString().substring(0,10);
   tagMode='and';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
@@ -1519,7 +1538,8 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
-  filterFrom=new Date().toISOString().substring(0,10);
+  var _cf2 = new Date(); _cf2.setDate(1); _cf2.setMonth(_cf2.getMonth()-1);
+  filterFrom = _cf2.toISOString().substring(0,10);
   tagMode='and';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});

@@ -605,7 +605,7 @@ function getPopupDots(tags) {
 }
 
 // Return array of unique tag-group colors for the pill bar (excl. Free, Indoor/Outdoor, language)
-var PILL_EXCLUDE = new Set(['Free','Indoor','Outdoor','Online','Open Door Day',
+var PILL_EXCLUDE = new Set(['Free','Indoor','Outdoor','Online',
   'German','English','French','Spanish','Italian','Polish','Japanese','Korean',
   'Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish',
   'Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese',
@@ -992,7 +992,7 @@ function refreshLangDropdown(langList, tagCounts) {
   });
 }
 
-var PLACE_TYPE_TAGS = ['Indoor', 'Outdoor', 'Online', 'Open Door Day'];
+var PLACE_TYPE_TAGS = ['Indoor', 'Outdoor', 'Online'];
 
 function refreshPlaceDropdown() {
   var _placeDropdown = document.getElementById('place-dropdown');
@@ -1116,6 +1116,7 @@ function buildFilters() {
     {label:'Events',        cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food','Protest','History','Open Door Day']},
     {label:'Community',     cls:'tg-community',  tags:['Queer','Sexuality','Family']},
   ];
+  // Indoor/Outdoor/Online intentionally excluded from TAG_GROUPS — they live in the Venue type dropdown only
   var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
   // Build lookup: tag → group class
   var tagGroupMap={};
@@ -1129,7 +1130,8 @@ function buildFilters() {
   var known=new Set(grouped);
   var LANG_SET = new Set(LANG_TAGS);
   Object.keys(tags).forEach(function(t){
-    if(!known.has(t)&&t!=='Price Unknown'&&t!=='Free'&&t!=='Explicit'&&!LANG_SET.has(t)) grouped.push(t);
+    var PLACE_EXCLUDE=new Set(['Indoor','Outdoor','Online']);
+    if(!known.has(t)&&t!=='Price Unknown'&&t!=='Free'&&t!=='Explicit'&&!LANG_SET.has(t)&&!PLACE_EXCLUDE.has(t)) grouped.push(t);
   });
 
   var strip=document.getElementById('tag-strip-tags');
@@ -1250,7 +1252,20 @@ function jumpCalToFirstMatchingMonth() {
     var d=new Date(e.startDate+'T12:00:00');
     if(d>=today && (!earliest||d<earliest)) earliest=d;
   });
-  if(earliest) { calYear=earliest.getFullYear(); calMonth=earliest.getMonth(); }
+  if(earliest) {
+    var prevYear=calYear, prevMonth=calMonth;
+    calYear=earliest.getFullYear(); calMonth=earliest.getMonth();
+    // Flash month label purple if we actually jumped to a different month
+    if(prevYear!==calYear || prevMonth!==calMonth) {
+      setTimeout(function(){
+        var lbl=document.getElementById('cal-month-label');
+        if(!lbl) return;
+        lbl.style.transition='color 0.25s ease';
+        lbl.style.color='var(--accent)';
+        setTimeout(function(){ lbl.style.color=''; setTimeout(function(){ lbl.style.transition=''; },300); },900);
+      }, 60); // slight delay so renderCalendar runs first
+    }
+  }
 }
 
 function applyFilters() {

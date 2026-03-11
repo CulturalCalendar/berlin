@@ -125,6 +125,10 @@
   #tag-strip { padding: 8px 20px 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 0; }
   .tag-strip-top { display: flex; align-items: center; gap: 5px; margin-bottom: 9px; }
   .tag-strip-tags { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .tag-group-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.10em;
+    color: var(--muted2); margin: 0 2px 0 10px; align-self: center; white-space: nowrap;
+    user-select: none; opacity: 0.7; }
+  .tag-group-label:first-child { margin-left: 0; }
   .tag-mode-wrap { display: flex; align-items: center; gap: 7px; margin-left: 6px; flex-shrink: 0; }
   .tag-mode-label { font-size: 11px; color: var(--muted2); font-family: 'DM Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; user-select: none; cursor: pointer; }
   .tag-mode-label.lit { color: var(--accent); }
@@ -145,13 +149,14 @@
   }
   .tag-toggle-track.or-mode .tag-toggle-knob { transform: translateX(24px); }
   /* SFW toggle */
-  .sfw-wrap { display: flex; align-items: center; gap: 7px; margin-left: 14px; flex-shrink: 0; }
+  .sfw-wrap { display: flex; align-items: center; gap: 7px; margin-left: 14px; flex-shrink: 0; width: 94px; box-sizing: border-box; }
   /* NOT toggle: sits inline after AND/OR, activates exclude mode */
   .not-btn { background: none; border: 1px solid var(--border2); color: var(--muted2); font-family: 'DM Mono', monospace;
-    font-size: 11px; padding: 2px 8px; border-radius: 3px; cursor: pointer; letter-spacing: 0.05em;
-    transition: all 0.15s; margin-left: 2px; text-transform: uppercase; }
+    font-size: 11px; padding: 2px 0; border-radius: 3px; cursor: pointer; letter-spacing: 0.05em;
+    transition: background 0.15s, border-color 0.15s, color 0.15s; margin-left: 2px; text-transform: uppercase;
+    width: 40px; text-align: center; font-weight: 500; flex-shrink: 0; box-sizing: border-box; }
   .not-btn:hover { border-color: #ef4444; color: #ef4444; }
-  .not-btn.active { background: rgba(239,68,68,0.12); border-color: #ef4444; color: #ef4444; font-weight: 600; }
+  .not-btn.active { background: rgba(239,68,68,0.12); border-color: #ef4444; color: #ef4444; }
   .sfw-label { font-size: 11px; color: var(--muted2); font-family: 'DM Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; user-select: none; cursor: pointer; }
   .sfw-label.lit { color: var(--accent); }
   .sfw-toggle-track {
@@ -366,6 +371,10 @@
       <button class="venue-filter-trigger" id="lang-filter-trigger">Language ▾</button>
       <div class="venue-dropdown" id="lang-dropdown"></div>
     </div>
+    <div class="venue-filter-wrap" id="place-filter-wrap">
+      <button class="venue-filter-trigger" id="place-filter-trigger">Venue type ▾</button>
+      <div class="venue-dropdown" id="place-dropdown"></div>
+    </div>
   </div>
   <div class="filter-divider"></div>
   <!-- Price filter as inline toggle buttons -->
@@ -515,7 +524,8 @@ var filterSources = new Set(); // multi-select, OR
 var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
 var tagMode = 'and'; // 'and' | 'or'
 var sfwMode = false;
-var filterLangs = new Set(); // OR between languages, AND with tag filters
+var filterLangs = new Set();
+var filterPlaceTypes = new Set(); // Indoor/Outdoor/Online/Open Door Day // OR between languages, AND with tag filters
 var currentView = "cal";
 var today = new Date();
 var calYear = today.getFullYear(), calMonth = today.getMonth();
@@ -558,15 +568,15 @@ function isAggregatorUrl(url) {
 
 var TAG_DOT_COLORS = {
   'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524','Vernissage':'#f8a524',
-  'Concert':'#9b6ee0','Theater':'#9b6ee0','Dance':'#9b6ee0','Opera':'#9b6ee0',
+  'Concert':'#9b6ee0','Theater':'#9b6ee0','Dance':'#9b6ee0','Opera':'#9b6ee0','Performance':'#9b6ee0',
   'Film':'#e0603e','Cinema':'#e0603e',
   'Literature':'#a233a1','Talk':'#a233a1','Poetry':'#a233a1','Book Club':'#a233a1',
   'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162',
-  'Workshop':'#c5447d','Market':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d',
+  'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d',
   'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Drag':'#e8e4a0',
   'Free':'#4ade80',
   'Finissage':'#f8a524',
-  'Indoor':'#6366f1','Outdoor':'#6366f1','Online':'#6366f1','Open Door Day':'#6366f1',
+  'Indoor':'#6366f1','Outdoor':'#6366f1','Online':'#6366f1',
   'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524',
   'Family':'#e8e4a0','History':'#c5447d',
 };
@@ -613,15 +623,15 @@ function pillColors(tags) {
 
 var TAG_CLASS_MAP = {
   'Exhibition':'tg-visual','Art':'tg-visual','Photography':'tg-visual','Painting':'tg-visual','Vernissage':'tg-visual',
-  'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing',
+  'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing','Performance':'tg-performing',
   'Film':'tg-screen','Cinema':'tg-screen',
   'Literature':'tg-words','Talk':'tg-words','Poetry':'tg-words','Book Club':'tg-words',
   'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife',
-  'Workshop':'tg-other','Market':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other',
+  'Workshop':'tg-other','Market':'tg-other','Open Door Day':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other',
   'Queer':'tg-community','Sexuality':'tg-community','Drag':'tg-community',
   'Free':'tg-free',
   'Finissage':'tg-visual',
-  'Indoor':'tg-place','Outdoor':'tg-place','Online':'tg-place','Open Door Day':'tg-place',
+  'Indoor':'tg-place','Outdoor':'tg-place','Online':'tg-place',
   'Sculpture':'tg-visual','Installation':'tg-visual','Open Studio':'tg-visual',
   'Family':'tg-community','History':'tg-other',
   'German':'tg-language','English':'tg-language','French':'tg-language','Spanish':'tg-language',
@@ -982,6 +992,38 @@ function refreshLangDropdown(langList, tagCounts) {
   });
 }
 
+var PLACE_TYPE_TAGS = ['Indoor', 'Outdoor', 'Online', 'Open Door Day'];
+
+function refreshPlaceDropdown() {
+  var _placeDropdown = document.getElementById('place-dropdown');
+  var _placeTrigger  = document.getElementById('place-filter-trigger');
+  if (!_placeDropdown) return;
+  _placeDropdown.innerHTML = '';
+  PLACE_TYPE_TAGS.forEach(function(pt) {
+    var row = document.createElement('div');
+    row.className = 'venue-row' + (filterPlaceTypes.has(pt) ? ' selected' : '');
+    row.textContent = pt;
+    row.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (filterPlaceTypes.has(pt)) filterPlaceTypes.delete(pt);
+      else filterPlaceTypes.add(pt);
+      refreshPlaceDropdown();
+      updatePlaceTrigger();
+      applyFilters();
+    });
+    _placeDropdown.appendChild(row);
+  });
+}
+
+function updatePlaceTrigger() {
+  var _placeTrigger = document.getElementById('place-filter-trigger');
+  if (!_placeTrigger) return;
+  _placeTrigger.textContent = filterPlaceTypes.size > 0
+    ? Array.from(filterPlaceTypes).join(', ') + ' ▾'
+    : 'Venue type ▾';
+  _placeTrigger.classList.toggle('active', filterPlaceTypes.size > 0);
+}
+
 function updateLangTrigger() {
   if (!_langTrigger) return;
   var n = filterLangs.size;
@@ -997,6 +1039,18 @@ if (_langTrigger) {
     if (opening) _langDropdown.classList.add('open');
   });
   _langDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+}
+
+var _placeTrigger2  = document.getElementById('place-filter-trigger');
+var _placeDropdown2 = document.getElementById('place-dropdown');
+if (_placeTrigger2) {
+  _placeTrigger2.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var opening = !_placeDropdown2.classList.contains('open');
+    closeAllDropdowns();
+    if (opening) _placeDropdown2.classList.add('open');
+  });
+  _placeDropdown2.addEventListener('click', function(e) { e.stopPropagation(); });
 }
 
 function loadCalendar() {
@@ -1052,15 +1106,15 @@ function buildFilters() {
   // Neighborhood dropdown populated via refreshNeighDropdown()
   refreshNeighDropdown(Object.keys(nh).sort());
   // venue dropdown built dynamically by refreshVenueDropdown()
+  refreshPlaceDropdown();
   var TAG_GROUPS=[
-    {cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Open Studio','Vernissage','Finissage']},
-    {cls:'tg-performing', tags:['Concert','Theater','Dance','Opera']},
-    {cls:'tg-screen',     tags:['Film','Cinema']},
-    {cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
-    {cls:'tg-nightlife',  tags:['Techno','Party','Festival','Comedy']},
-    {cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food','Protest','History']},
-    {cls:'tg-community',  tags:['Queer','Sexuality','Drag','Family']},
-    {cls:'tg-place',      tags:['Indoor','Outdoor','Online','Open Door Day']},
+    {label:'Art & Visual',  cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Open Studio','Vernissage','Finissage']},
+    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Opera','Performance']},
+    {label:'Screen',        cls:'tg-screen',     tags:['Film','Cinema']},
+    {label:'Words',         cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
+    {label:'Nightlife',     cls:'tg-nightlife',  tags:['Techno','Party','Festival','Comedy','Drag']},
+    {label:'Events',        cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food','Protest','History','Open Door Day']},
+    {label:'Community',     cls:'tg-community',  tags:['Queer','Sexuality','Family']},
   ];
   var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
   // Build lookup: tag → group class
@@ -1079,9 +1133,22 @@ function buildFilters() {
   });
 
   var strip=document.getElementById('tag-strip-tags');
+  var _lastGrpCls=null;
+  // Build tag→group map for label rendering
+  var _tagToGrp={};
+  TAG_GROUPS.forEach(function(g){g.tags.forEach(function(t){_tagToGrp[t]=g;});});
   grouped.forEach(function(tag){
+    var _grp=_tagToGrp[tag];
+    var grpCls=_grp?_grp.cls:'tg-other';
+    // Emit a group label when entering a new named group
+    if(_grp&&_grp.label&&grpCls!==_lastGrpCls){
+      var _lbl=document.createElement('span');
+      _lbl.className='tag-group-label';
+      _lbl.textContent=_grp.label;
+      strip.appendChild(_lbl);
+      _lastGrpCls=grpCls;
+    }
     var btn=document.createElement('button');
-    var grpCls=tagGroupMap[tag]||'tg-other';
     btn.className='tag-filter-btn '+grpCls;
     btn.textContent=tag+' ('+(tags[tag]||0)+')'; btn.dataset.tag=tag;
     btn.addEventListener('click',function(){
@@ -1208,6 +1275,13 @@ function applyFilters() {
       var anyLang=false;
       filterLangs.forEach(function(l){if(et2.indexOf(l)!==-1)anyLang=true;});
       if(!anyLang) return false;
+    }
+    // Venue type filter (Indoor/Outdoor/Online/Open Door Day) — OR logic
+    if(filterPlaceTypes.size>0){
+      var etPl=e.tags||[];
+      var anyPl=false;
+      filterPlaceTypes.forEach(function(pt){if(etPl.indexOf(pt)!==-1)anyPl=true;});
+      if(!anyPl) return false;
     }
     if(activeTags.size>0){
       var et=e.tags||[];
@@ -1403,8 +1477,8 @@ document.getElementById('date-from').addEventListener('change',function(){filter
 document.getElementById('date-to').addEventListener('change',function(){filterTo=this.value;applyFilters();});
 document.getElementById('clear-btn').addEventListener('click',function(){
   // Reset state
-  activeTags.clear(); excludeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
-  updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger();
+  activeTags.clear(); excludeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear(); filterPlaceTypes.clear();
+  updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
   filterFrom=new Date().toISOString().substring(0,10);
@@ -1426,8 +1500,8 @@ document.getElementById('clear-btn').addEventListener('click',function(){
 
 document.getElementById('site-title-btn').addEventListener('click', function() {
   // Clear all filter state
-  activeTags.clear(); excludeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear();
-  updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger();
+  activeTags.clear(); excludeTags.clear(); filterLangs.clear(); filterSources.clear(); filterVenues.clear(); filterPlaceTypes.clear();
+  updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
   filterFrom=new Date().toISOString().substring(0,10);

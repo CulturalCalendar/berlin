@@ -14,7 +14,7 @@
     --surface3: #222;
     --border: #272727;
     --border2: #333;
-    --accent: #a78bfa;
+    --accent: #8b5cf6;
     --accent2: #f5c842;
     --text: #e8e8e8;
     --muted: #888;
@@ -28,7 +28,7 @@
     --surface3: #d8d3c8;
     --border: #ccc8be;
     --border2: #bbb5a8;
-    --accent: #7c3aed;
+    --accent: #6d28d9;
     --accent2: #b45309;
     --text: #1a1814;
     --muted: #3d3830;
@@ -71,12 +71,14 @@
   select:hover, input:hover, select:focus, input:focus { border-color: var(--accent); }
   select { padding-right: 26px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
   /* Tag group colors — Magma palette, strictly alternating purple / non-purple */
-  /* Order: visual=amber, performing=purple, screen=orange, words=violet,   */
-  /*        nightlife=yellow, other=rose-purple, community=pale             */
+  /* Order: visual=amber, performing=teal, words=sky-blue,                  */
+  /*        nightlife=yellow, other=rose, community=pale                    */
+  /* Rule: no purple-spectrum color adjacent to non-purple. Live+Words      */
+  /* moved to teal/blue so the strip is a coherent non-conflicting spectrum.*/
   .tag-filter-btn.tg-visual     { border-color: #a07010; }
-  .tag-filter-btn.tg-performing { border-color: #5a2a9a; }
+  .tag-filter-btn.tg-performing { border-color: #0e7a6a; }
   .tag-filter-btn.tg-screen     { border-color: #a04020; }
-  .tag-filter-btn.tg-words      { border-color: #6b1f72; }
+  .tag-filter-btn.tg-words      { border-color: #1e5a8a; }
   .tag-filter-btn.tg-nightlife  { border-color: #9a8820; }
   .tag-filter-btn.tg-other      { border-color: #7a2555; }
   .tag-filter-btn.tg-community  { border-color: #8a8060; }
@@ -84,9 +86,9 @@
   .tag-filter-btn.tg-language   { border-color: #0e7490; }  /* teal: language tags */
 
   .tag-filter-btn.tg-visual.active     { background: rgba(248,165,36,0.12);  border-color: #f8a524; color: #f8a524; }
-  .tag-filter-btn.tg-performing.active { background: rgba(155,110,224,0.15); border-color: #9b6ee0; color: #9b6ee0; }
+  .tag-filter-btn.tg-performing.active { background: rgba(45,212,160,0.12);  border-color: #2dd4a0; color: #2dd4a0; }
   .tag-filter-btn.tg-screen.active     { background: rgba(224,96,62,0.14);   border-color: #e0603e; color: #e0603e; }
-  .tag-filter-btn.tg-words.active      { background: rgba(162,51,161,0.16);  border-color: #a233a1; color: #a233a1; }
+  .tag-filter-btn.tg-words.active      { background: rgba(96,165,250,0.12);  border-color: #60a5fa; color: #60a5fa; }
   .tag-filter-btn.tg-nightlife.active  { background: rgba(249,209,98,0.10);  border-color: #f9d162; color: #f9d162; }
   .tag-filter-btn.tg-other.active      { background: rgba(197,68,125,0.14);  border-color: #c5447d; color: #c5447d; }
   .tag-filter-btn.tg-community.active  { background: rgba(232,228,160,0.08); border-color: #e8e4a0; color: #e8e4a0; }
@@ -142,9 +144,9 @@
   .tag-group-btn:hover { border-color: var(--accent); color: var(--text); }
   .tag-group-btn.grp-active { font-weight: 500; }
   .tag-group-btn.grp-active.tg-visual     { border-color: #f8a524; color: #f8a524; background: rgba(248,165,36,0.12); }
-  .tag-group-btn.grp-active.tg-performing { border-color: #9b6ee0; color: #9b6ee0; background: rgba(155,110,224,0.15); }
+  .tag-group-btn.grp-active.tg-performing { border-color: #2dd4a0; color: #2dd4a0; background: rgba(45,212,160,0.12); }
   .tag-group-btn.grp-active.tg-screen     { border-color: #e0603e; color: #e0603e; background: rgba(224,96,62,0.14); }
-  .tag-group-btn.grp-active.tg-words      { border-color: #a233a1; color: #a233a1; background: rgba(162,51,161,0.16); }
+  .tag-group-btn.grp-active.tg-words      { border-color: #60a5fa; color: #60a5fa; background: rgba(96,165,250,0.12); }
   .tag-group-btn.grp-active.tg-nightlife  { border-color: #f9d162; color: #f9d162; background: rgba(249,209,98,0.10); }
   .tag-group-btn.grp-active.tg-other      { border-color: #c5447d; color: #c5447d; background: rgba(197,68,125,0.14); }
   .tag-group-btn.grp-active.tg-community  { border-color: #e8e4a0; color: #e8e4a0; background: rgba(232,228,160,0.08); }
@@ -248,9 +250,9 @@
   .event-tags { display: flex; flex-wrap: wrap; gap: 4px; }
   .tag { font-size: 10px; padding: 2px 6px; border-radius: 2px; background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); }
   .tag.tg-visual     { border-color: #f8a524; color: #f8a524; }
-  .tag.tg-performing { border-color: #9b6ee0; color: #9b6ee0; }
+  .tag.tg-performing { border-color: #2dd4a0; color: #2dd4a0; }
   .tag.tg-screen     { border-color: #e0603e; color: #e0603e; }
-  .tag.tg-words      { border-color: #a233a1; color: #a233a1; }
+  .tag.tg-words      { border-color: #60a5fa; color: #60a5fa; }
   .tag.tg-nightlife  { border-color: #f9d162; color: #f9d162; }
   .tag.tg-other      { border-color: #c5447d; color: #c5447d; }
   .tag.tg-community  { border-color: #e8e4a0; color: #e8e4a0; }
@@ -427,15 +429,15 @@
     <span class="filter-label">Tags</span>
     <div class="tag-mode-wrap">
       <span class="tag-mode-label lit" id="tag-label-and">AND</span>
-      <div class="tag-toggle-track" id="tag-toggle-track" title="Switch between AND (all tags must match) and OR (any tag matches)">
+      <div class="tag-toggle-track" id="tag-toggle-track">
         <div class="tag-toggle-knob"></div>
       </div>
       <span class="tag-mode-label" id="tag-label-or">OR</span>
-      <button class="not-btn" id="not-btn" title="Hide events that have the selected tags">NOT</button>
+      <button class="not-btn" id="not-btn">NOT</button>
     </div>
     <div class="sfw-wrap">
       <span class="sfw-label" id="sfw-label-off">🔞</span>
-      <div class="sfw-toggle-track" id="sfw-toggle-track" title="Hide explicit sexual content">
+      <div class="sfw-toggle-track" id="sfw-toggle-track">
         <div class="sfw-toggle-knob"></div>
       </div>
       <span class="sfw-label" id="sfw-label-on">SFW</span>
@@ -563,6 +565,7 @@ var filterPlaceTypes = new Set(); // Indoor/Outdoor/Online/Open Door Day // OR b
 var currentView = "cal";
 var today = new Date();
 var calYear = today.getFullYear(), calMonth = today.getMonth();
+var _savedLangList = [], _savedLangCounts = {}; // saved for clear-all rebuild
 
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -603,8 +606,8 @@ function isAggregatorUrl(url) {
 var TAG_DOT_COLORS = {
   'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524',
   'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524','Vernissage':'#f8a524','Finissage':'#f8a524',
-  'Concert':'#9b6ee0','Theater':'#9b6ee0','Dance':'#9b6ee0','Opera':'#9b6ee0','Performance':'#9b6ee0','Film':'#9b6ee0',
-  'Literature':'#a233a1','Talk':'#a233a1','Poetry':'#a233a1','Book Club':'#a233a1',
+  'Concert':'#2dd4a0','Theater':'#2dd4a0','Dance':'#2dd4a0','Opera':'#2dd4a0','Performance':'#2dd4a0','Film':'#2dd4a0',
+  'Literature':'#60a5fa','Talk':'#60a5fa','Poetry':'#60a5fa','Book Club':'#60a5fa',
   'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162','Drag':'#f9d162',
   'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d','History':'#c5447d',
   'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Family':'#e8e4a0',
@@ -847,15 +850,13 @@ function refreshNeighDropdown(neighList) {
     var row = document.createElement('div'); row.className='venue-option';
     var cb = document.createElement('input'); cb.type='checkbox'; cb.id='nhopt-'+nh;
     cb.checked = filterNeighborhoods.has(nh);
-    var lbl2 = document.createElement('label'); lbl2.htmlFor='nhopt-'+nh; lbl2.textContent=nh;
+    var lbl2 = document.createElement('label'); lbl2.textContent=nh;
     row.addEventListener('click', function(e) {
       e.stopPropagation();
       if (filterNeighborhoods.has(nh)) { filterNeighborhoods.delete(nh); cb.checked = false; }
       else { filterNeighborhoods.add(nh); cb.checked = true; }
       updateNeighTrigger(); applyFilters();
     });
-    // Prevent double-toggle when clicking directly on checkbox
-    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _neighDropdown.appendChild(row);
   });
 }
@@ -919,14 +920,13 @@ function refreshVenueDropdown() {
     var row = document.createElement('div'); row.className='venue-option';
     var cb  = document.createElement('input'); cb.type='checkbox'; cb.id='vopt-'+venue;
     cb.checked = filterVenues.has(venue);
-    var lbl2 = document.createElement('label'); lbl2.htmlFor='vopt-'+venue; lbl2.textContent=venue;
+    var lbl2 = document.createElement('label'); lbl2.textContent=venue;
     row.addEventListener('click', function(e) {
       e.stopPropagation();
       if (filterVenues.has(venue)) { filterVenues.delete(venue); cb.checked = false; }
       else { filterVenues.add(venue); cb.checked = true; }
       updateVenueTrigger(); applyFilters();
     });
-    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _venueDropdown.appendChild(row);
   });
 }
@@ -978,14 +978,13 @@ function refreshSourceDropdown(sourceList) {
     var row = document.createElement('div'); row.className='venue-option';
     var cb = document.createElement('input'); cb.type='checkbox'; cb.id='sopt-'+src;
     cb.checked = filterSources.has(src);
-    var lbl2 = document.createElement('label'); lbl2.htmlFor='sopt-'+src; lbl2.textContent=label;
+    var lbl2 = document.createElement('label'); lbl2.textContent=label;
     row.addEventListener('click', function(e) {
       e.stopPropagation();
       if (filterSources.has(src)) { filterSources.delete(src); cb.checked = false; }
       else { filterSources.add(src); cb.checked = true; }
       updateSourceTrigger(); applyFilters();
     });
-    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _sourceDropdown.appendChild(row);
   });
 }
@@ -1025,7 +1024,7 @@ function refreshLangDropdown(langList, tagCounts) {
     var row = document.createElement('div'); row.className='venue-option';
     var cb = document.createElement('input'); cb.type='checkbox'; cb.id='lopt-'+lang;
     cb.checked = filterLangs.has(lang);
-    var lbl2 = document.createElement('label'); lbl2.htmlFor='lopt-'+lang;
+    var lbl2 = document.createElement('label');
     lbl2.textContent = lang + (count ? ' ('+count+')' : '');
     row.addEventListener('click', function(e) {
       e.stopPropagation();
@@ -1033,7 +1032,6 @@ function refreshLangDropdown(langList, tagCounts) {
       else { filterLangs.add(lang); cb.checked = true; }
       updateLangTrigger(); applyFilters();
     });
-    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _langDropdown.appendChild(row);
   });
 }
@@ -1054,14 +1052,13 @@ function refreshPlaceDropdown() {
     var row = document.createElement('div'); row.className='venue-option';
     var cb = document.createElement('input'); cb.type='checkbox'; cb.id='ptopt-'+pt;
     cb.checked = filterPlaceTypes.has(pt);
-    var lbl2 = document.createElement('label'); lbl2.htmlFor='ptopt-'+pt; lbl2.textContent=pt;
+    var lbl2 = document.createElement('label'); lbl2.textContent=pt;
     row.addEventListener('click', function(e) {
       e.stopPropagation();
       if (filterPlaceTypes.has(pt)) { filterPlaceTypes.delete(pt); cb.checked=false; }
       else { filterPlaceTypes.add(pt); cb.checked=true; }
       updatePlaceTrigger(); applyFilters();
     });
-    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _placeDropdown.appendChild(row);
   });
 }
@@ -1206,7 +1203,7 @@ function loadCalendar() {
         venue:(item.location||'').split(',')[0].trim(),
         fullLocation:item.location||'',
         neighborhood:p.location?p.location.split(',').pop().trim():'',
-        price:p.price||'', tags:(p.tags||[]).filter(function(t){return t!=='Museum';}), summary:summary,
+        price:p.price||'', tags:(p.tags||[]).filter(function(t){return t!=='Museum';}).map(function(t){return t==='Cinema'?'Film':t;}), summary:summary,
         source:normalizeSourceLabel(p.source||''), sourceUrl:p.sourceUrl||'', eventUrl:p.eventUrl||'', officialUrl:p.officialUrl||'', mapsUrl:p.mapsUrl||'',
         rawDescription:item.description||''
       };
@@ -1410,6 +1407,7 @@ function buildFilters() {
   // Build language multi-select dropdown (OR internally)
   var LANG_ORDER = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
   var activeLangs = LANG_ORDER.filter(function(l){ return tags[l]; });
+  _savedLangList = activeLangs; _savedLangCounts = tags;
   refreshLangDropdown(activeLangs, tags);
 
   // Wire tag mode sliding toggle — setTagMode is defined at top level
@@ -1717,6 +1715,8 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   document.getElementById('search-input').value='';
   refreshNeighDropdown(); updateNeighTrigger();
   refreshSourceDropdown();
+  refreshVenueDropdown();
+  refreshLangDropdown(_savedLangList, _savedLangCounts);
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
@@ -1741,6 +1741,8 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   document.getElementById('search-input').value='';
   refreshNeighDropdown(); updateNeighTrigger();
   refreshSourceDropdown();
+  refreshVenueDropdown();
+  refreshLangDropdown(_savedLangList, _savedLangCounts);
   document.getElementById('date-from').value=filterFrom;
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});

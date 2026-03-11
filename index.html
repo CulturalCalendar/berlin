@@ -129,6 +129,20 @@
     color: var(--muted2); margin: 0 2px 0 10px; align-self: center; white-space: nowrap;
     user-select: none; opacity: 0.7; }
   .tag-group-label:first-child { margin-left: 0; }
+  /* Category group button (A/J hybrid) */
+  .tag-group-btn {
+    font-family: 'DM Mono', monospace; font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.10em; color: var(--muted2); background: none;
+    border: 1px solid var(--border2); border-radius: 3px;
+    padding: 2px 7px; cursor: pointer; white-space: nowrap;
+    user-select: none; transition: all 0.12s; align-self: center;
+    margin: 0 3px 0 10px; flex-shrink: 0;
+  }
+  .tag-group-btn:first-child { margin-left: 0; }
+  .tag-group-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tag-group-btn.grp-active { border-color: var(--accent2); color: var(--accent2); background: rgba(244,114,182,0.08); font-weight: 500; }
+  /* Anchor wrapper: keeps the group btn and the first tag on the same flex line */
+  .tag-group-anchor { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
   .tag-mode-wrap { display: flex; align-items: center; gap: 7px; margin-left: 6px; flex-shrink: 0; }
   .tag-mode-label { font-size: 11px; color: var(--muted2); font-family: 'DM Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; user-select: none; cursor: pointer; }
   .tag-mode-label.lit { color: var(--accent); }
@@ -196,7 +210,7 @@
   .cal-day { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-height: 100px; padding: 4px; position: relative; overflow: hidden; min-width: 0; }
   .cal-day.other-month { background: var(--bg); }
   .cal-day.today { background: #13102a; }
-  body.light .cal-day.today { background: #0e0e0e; }
+  body.light .cal-day.today { background: #dedad2; }
   .cal-day-num { font-size: 11px; color: var(--muted); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 3px; }
   .cal-day.today .cal-day-num { background: var(--accent); color: #000; font-weight: 500; }
   .cal-event-pill { display: flex; align-items: center; gap: 4px; width: 100%; font-size: 11px; line-height: 1.3; padding: 2px 4px 2px 7px; margin-bottom: 2px; border-radius: 2px; background: var(--surface2); border: none; color: var(--text); cursor: pointer; transition: background 0.1s; text-align: left; font-family: 'DM Mono', monospace; overflow: hidden; position: relative; }
@@ -567,18 +581,16 @@ function isAggregatorUrl(url) {
 }
 
 var TAG_DOT_COLORS = {
-  'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524','Vernissage':'#f8a524',
+  'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524',
+  'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524','Vernissage':'#f8a524','Finissage':'#f8a524',
   'Concert':'#9b6ee0','Theater':'#9b6ee0','Dance':'#9b6ee0','Opera':'#9b6ee0','Performance':'#9b6ee0',
   'Film':'#e0603e','Cinema':'#e0603e',
   'Literature':'#a233a1','Talk':'#a233a1','Poetry':'#a233a1','Book Club':'#a233a1',
-  'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162',
-  'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d',
-  'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Drag':'#e8e4a0',
+  'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162','Drag':'#f9d162',
+  'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d','History':'#c5447d',
+  'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Family':'#e8e4a0',
   'Free':'#4ade80',
-  'Finissage':'#f8a524',
   'Indoor':'#6366f1','Outdoor':'#6366f1','Online':'#6366f1',
-  'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524',
-  'Family':'#e8e4a0','History':'#c5447d',
 };
 
 // Calendar pill: only show green dot for Free events
@@ -622,18 +634,16 @@ function pillColors(tags) {
 
 
 var TAG_CLASS_MAP = {
-  'Exhibition':'tg-visual','Art':'tg-visual','Photography':'tg-visual','Painting':'tg-visual','Vernissage':'tg-visual',
+  'Exhibition':'tg-visual','Art':'tg-visual','Photography':'tg-visual','Painting':'tg-visual',
+  'Sculpture':'tg-visual','Installation':'tg-visual','Open Studio':'tg-visual','Vernissage':'tg-visual','Finissage':'tg-visual',
   'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing','Performance':'tg-performing',
   'Film':'tg-screen','Cinema':'tg-screen',
   'Literature':'tg-words','Talk':'tg-words','Poetry':'tg-words','Book Club':'tg-words',
-  'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife',
-  'Workshop':'tg-other','Market':'tg-other','Open Door Day':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other',
-  'Queer':'tg-community','Sexuality':'tg-community','Drag':'tg-community',
+  'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife','Drag':'tg-nightlife',
+  'Workshop':'tg-other','Market':'tg-other','Open Door Day':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other','History':'tg-other',
+  'Queer':'tg-community','Sexuality':'tg-community','Family':'tg-community',
   'Free':'tg-free',
-  'Finissage':'tg-visual',
   'Indoor':'tg-place','Outdoor':'tg-place','Online':'tg-place',
-  'Sculpture':'tg-visual','Installation':'tg-visual','Open Studio':'tg-visual',
-  'Family':'tg-community','History':'tg-other',
   'German':'tg-language','English':'tg-language','French':'tg-language','Spanish':'tg-language',
   'Italian':'tg-language','Polish':'tg-language','Japanese':'tg-language','Korean':'tg-language',
   'Arabic':'tg-language','Turkish':'tg-language','Russian':'tg-language','Hebrew':'tg-language',
@@ -820,10 +830,14 @@ function refreshNeighDropdown(neighList) {
     var cb = document.createElement('input'); cb.type='checkbox'; cb.id='nhopt-'+nh;
     cb.checked = filterNeighborhoods.has(nh);
     var lbl2 = document.createElement('label'); lbl2.htmlFor='nhopt-'+nh; lbl2.textContent=nh;
-    cb.addEventListener('change', function() {
-      if (cb.checked) filterNeighborhoods.add(nh); else filterNeighborhoods.delete(nh);
+    row.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (filterNeighborhoods.has(nh)) { filterNeighborhoods.delete(nh); cb.checked = false; }
+      else { filterNeighborhoods.add(nh); cb.checked = true; }
       updateNeighTrigger(); applyFilters();
     });
+    // Prevent double-toggle when clicking directly on checkbox
+    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _neighDropdown.appendChild(row);
   });
 }
@@ -888,10 +902,13 @@ function refreshVenueDropdown() {
     var cb  = document.createElement('input'); cb.type='checkbox'; cb.id='vopt-'+venue;
     cb.checked = filterVenues.has(venue);
     var lbl2 = document.createElement('label'); lbl2.htmlFor='vopt-'+venue; lbl2.textContent=venue;
-    cb.addEventListener('change', function() {
-      if (cb.checked) filterVenues.add(venue); else filterVenues.delete(venue);
+    row.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (filterVenues.has(venue)) { filterVenues.delete(venue); cb.checked = false; }
+      else { filterVenues.add(venue); cb.checked = true; }
       updateVenueTrigger(); applyFilters();
     });
+    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _venueDropdown.appendChild(row);
   });
 }
@@ -907,15 +924,18 @@ _venueTrigger.addEventListener('click', function(e) {
   e.stopPropagation();
   var opening = !_venueDropdown.classList.contains('open');
   closeAllDropdowns();
-  if (opening) { refreshVenueDropdown(); _venueDropdown.classList.add('open'); }
+  if (opening) {
+    refreshVenueDropdown(); // rebuild content first
+    _venueDropdown.classList.add('open');
+  }
 });
 function closeAllDropdowns() {
   _venueDropdown.classList.remove('open');
-  if (_neighDropdown)   _neighDropdown.classList.remove('open');
-  if (_sourceDropdown)  _sourceDropdown.classList.remove('open');
-  if (_langDropdown)    _langDropdown.classList.remove('open');
-  var pd = document.getElementById('place-dropdown');
-  if (pd) pd.classList.remove('open');
+  if (_neighDropdown)  _neighDropdown.classList.remove('open');
+  if (_sourceDropdown) _sourceDropdown.classList.remove('open');
+  if (_langDropdown)   _langDropdown.classList.remove('open');
+  var _pd = document.getElementById('place-dropdown');
+  if (_pd) _pd.classList.remove('open');
 }
 document.addEventListener('click', closeAllDropdowns);
 _venueDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
@@ -941,10 +961,13 @@ function refreshSourceDropdown(sourceList) {
     var cb = document.createElement('input'); cb.type='checkbox'; cb.id='sopt-'+src;
     cb.checked = filterSources.has(src);
     var lbl2 = document.createElement('label'); lbl2.htmlFor='sopt-'+src; lbl2.textContent=label;
-    cb.addEventListener('change', function() {
-      if (cb.checked) filterSources.add(src); else filterSources.delete(src);
+    row.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (filterSources.has(src)) { filterSources.delete(src); cb.checked = false; }
+      else { filterSources.add(src); cb.checked = true; }
       updateSourceTrigger(); applyFilters();
     });
+    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _sourceDropdown.appendChild(row);
   });
 }
@@ -986,10 +1009,13 @@ function refreshLangDropdown(langList, tagCounts) {
     cb.checked = filterLangs.has(lang);
     var lbl2 = document.createElement('label'); lbl2.htmlFor='lopt-'+lang;
     lbl2.textContent = lang + (count ? ' ('+count+')' : '');
-    cb.addEventListener('change', function() {
-      if (cb.checked) filterLangs.add(lang); else filterLangs.delete(lang);
+    row.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (filterLangs.has(lang)) { filterLangs.delete(lang); cb.checked = false; }
+      else { filterLangs.add(lang); cb.checked = true; }
       updateLangTrigger(); applyFilters();
     });
+    cb.addEventListener('click', function(e) { e.stopPropagation(); });
     row.appendChild(cb); row.appendChild(lbl2); _langDropdown.appendChild(row);
   });
 }
@@ -998,42 +1024,32 @@ var PLACE_TYPE_TAGS = ['Indoor', 'Outdoor', 'Online'];
 
 function refreshPlaceDropdown() {
   var _placeDropdown = document.getElementById('place-dropdown');
+  var _placeTrigger  = document.getElementById('place-filter-trigger');
   if (!_placeDropdown) return;
   _placeDropdown.innerHTML = '';
-  var hdr = document.createElement('div'); hdr.className = 'venue-dropdown-header';
-  var lbl = document.createElement('span'); lbl.style.cssText = 'font-size:11px;color:var(--muted);font-family:DM Mono,monospace;';
-  lbl.textContent = 'Venue type';
-  var clr = document.createElement('button'); clr.className = 'venue-dropdown-clear'; clr.textContent = 'Clear';
-  clr.addEventListener('click', function(e) {
-    e.stopPropagation();
-    filterPlaceTypes.clear();
-    refreshPlaceDropdown();
-    updatePlaceTrigger();
-    applyFilters();
-  });
-  hdr.appendChild(lbl); hdr.appendChild(clr); _placeDropdown.appendChild(hdr);
   PLACE_TYPE_TAGS.forEach(function(pt) {
-    var row = document.createElement('div'); row.className = 'venue-option';
-    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = 'ptopt-' + pt;
-    cb.checked = filterPlaceTypes.has(pt);
-    var lbl2 = document.createElement('label'); lbl2.htmlFor = 'ptopt-' + pt; lbl2.textContent = pt;
-    cb.addEventListener('change', function() {
-      if (cb.checked) filterPlaceTypes.add(pt); else filterPlaceTypes.delete(pt);
+    var row = document.createElement('div');
+    row.className = 'venue-row' + (filterPlaceTypes.has(pt) ? ' selected' : '');
+    row.textContent = pt;
+    row.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (filterPlaceTypes.has(pt)) filterPlaceTypes.delete(pt);
+      else filterPlaceTypes.add(pt);
+      refreshPlaceDropdown();
       updatePlaceTrigger();
       applyFilters();
     });
-    row.appendChild(cb); row.appendChild(lbl2); _placeDropdown.appendChild(row);
+    _placeDropdown.appendChild(row);
   });
 }
 
 function updatePlaceTrigger() {
   var _placeTrigger = document.getElementById('place-filter-trigger');
   if (!_placeTrigger) return;
-  var n = filterPlaceTypes.size;
-  _placeTrigger.textContent = n === 0
-    ? 'Venue type ▾'
-    : Array.from(filterPlaceTypes).join(', ') + ' ▾';
-  _placeTrigger.classList.toggle('has-selection', n > 0);
+  _placeTrigger.textContent = filterPlaceTypes.size > 0
+    ? Array.from(filterPlaceTypes).join(', ') + ' ▾'
+    : 'Venue type ▾';
+  _placeTrigger.classList.toggle('active', filterPlaceTypes.size > 0);
 }
 
 function updateLangTrigger() {
@@ -1110,8 +1126,9 @@ function loadCalendar() {
 
 function buildFilters() {
   var nh={},v={},tags={};
+  var NH_EXCLUDE = new Set(['Venue unknown', 'Unknown neighborhood', 'Online', 'Berlin']);
   allEvents.forEach(function(e){
-    if(e.neighborhood&&e.neighborhood!=='Berlin') nh[e.neighborhood]=true;
+    if(e.neighborhood && !NH_EXCLUDE.has(e.neighborhood)) nh[e.neighborhood]=true;
     if(e.venue) v[e.venue]=true;
     (e.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});
   });
@@ -1121,11 +1138,11 @@ function buildFilters() {
   refreshPlaceDropdown();
   var TAG_GROUPS=[
     {label:'Art & Visual',  cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Open Studio','Vernissage','Finissage']},
-    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Opera','Performance']},
+    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera']},
     {label:'Screen',        cls:'tg-screen',     tags:['Film','Cinema']},
-    {label:'Words',         cls:'tg-words',      tags:['Literature','Talk','Poetry','Book Club']},
-    {label:'Nightlife',     cls:'tg-nightlife',  tags:['Techno','Party','Festival','Comedy','Drag']},
-    {label:'Events',        cls:'tg-other',      tags:['Workshop','Market','Guided Tour','Food','Protest','History','Open Door Day']},
+    {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club']},
+    {label:'Nightlife',     cls:'tg-nightlife',  tags:['Party','Techno','Festival','Drag','Comedy']},
+    {label:'Events',        cls:'tg-other',      tags:['Workshop','Guided Tour','Market','Food','History','Open Door Day','Protest']},
     {label:'Community',     cls:'tg-community',  tags:['Queer','Sexuality','Family']},
   ];
   // Indoor/Outdoor/Online intentionally excluded from TAG_GROUPS — they live in the Venue type dropdown only
@@ -1148,55 +1165,136 @@ function buildFilters() {
 
   var strip=document.getElementById('tag-strip-tags');
   var _lastGrpCls=null;
-  // Build tag→group map for label rendering
+  // Build tag→group map
   var _tagToGrp={};
   TAG_GROUPS.forEach(function(g){g.tags.forEach(function(t){_tagToGrp[t]=g;});});
-  grouped.forEach(function(tag){
+
+  // Track group buttons so we can sync their active state
+  var _grpBtns = {}; // cls → button element
+  var _grpTagBtns = {}; // cls → [tag button elements]
+
+  function syncGroupBtn(grp) {
+    var btn = _grpBtns[grp.cls];
+    if (!btn) return;
+    // Group is "active" only if ALL of its visible tags are selected
+    var visibleTags = grp.tags.filter(function(t){ return tags[t]; });
+    var allActive = visibleTags.length > 0 && visibleTags.every(function(t){ return activeTags.has(t); });
+    btn.classList.toggle('grp-active', allActive);
+  }
+
+  grouped.forEach(function(tag, idx){
     var _grp=_tagToGrp[tag];
     var grpCls=_grp?_grp.cls:'tg-other';
-    // Emit a group label when entering a new named group
+
+    // Emit a group button when entering a new named group
     if(_grp&&_grp.label&&grpCls!==_lastGrpCls){
-      var _lbl=document.createElement('span');
-      _lbl.className='tag-group-label';
-      _lbl.textContent=_grp.label;
-      strip.appendChild(_lbl);
-      _lastGrpCls=grpCls;
-    }
-    var btn=document.createElement('button');
-    btn.className='tag-filter-btn '+grpCls;
-    btn.textContent=tag+' ('+(tags[tag]||0)+')'; btn.dataset.tag=tag;
-    btn.addEventListener('click',function(){
-      if(notMode){
-        // NOT mode: toggle this tag as excluded
-        if(excludeTags.has(tag)){
-          excludeTags.delete(tag); btn.classList.remove('excluded');
-        } else {
-          activeTags.delete(tag); btn.classList.remove('active');
-          excludeTags.add(tag);   btn.classList.add('excluded');
-        }
-      } else {
-        // Normal mode: toggle include
-        if(activeTags.has(tag)){
-          activeTags.delete(tag); btn.classList.remove('active');
-        } else {
-          excludeTags.delete(tag); btn.classList.remove('excluded');
-          activeTags.add(tag);     btn.classList.add('active');
-        }
+      // The anchor wraps the group button + first tag so they never split across lines
+      var anchor = document.createElement('span');
+      anchor.className = 'tag-group-anchor';
+      // Add left margin that the old label had (unless it's the first group)
+      if (_lastGrpCls !== null) anchor.style.marginLeft = '8px';
+
+      var grpBtn = document.createElement('button');
+      grpBtn.className = 'tag-group-btn';
+      grpBtn.textContent = _grp.label;
+      grpBtn.dataset.grpcls = grpCls;
+      _grpBtns[grpCls] = grpBtn;
+      _grpTagBtns[grpCls] = [];
+
+      (function(g, gb) {
+        gb.addEventListener('click', function() {
+          var visibleTags = g.tags.filter(function(t){ return tags[t]; });
+          var allActive = visibleTags.every(function(t){ return activeTags.has(t); });
+          if (allActive) {
+            // Deselect all tags in group
+            visibleTags.forEach(function(t){
+              activeTags.delete(t);
+              var b = _grpTagBtns[g.cls] && _grpTagBtns[g.cls].find(function(bb){ return bb.dataset.tag===t; });
+              if (b) b.classList.remove('active');
+            });
+          } else {
+            // Select all tags in group, switch to OR mode
+            visibleTags.forEach(function(t){
+              excludeTags.delete(t);
+              activeTags.add(t);
+              var b = _grpTagBtns[g.cls] && _grpTagBtns[g.cls].find(function(bb){ return bb.dataset.tag===t; });
+              if (b) { b.classList.remove('excluded'); b.classList.add('active'); }
+            });
+            if (tagMode !== 'or') { setTagMode('or'); }
+          }
+          syncGroupBtn(g);
+          applyFilters();
+        });
+      })(_grp, grpBtn);
+
+      anchor.appendChild(grpBtn);
+
+      // First tag button goes inside the anchor to prevent wrap-separation
+      var firstTag = _grp.tags.filter(function(t){ return tags[t]; })[0];
+      if (firstTag) {
+        var firstBtn = makeTagBtn(firstTag, grpCls, tags, _grp, _grpBtns, _grpTagBtns, syncGroupBtn);
+        _grpTagBtns[grpCls].push(firstBtn);
+        anchor.appendChild(firstBtn);
       }
-      applyFilters();
-    });
-    strip.appendChild(btn);
+
+      strip.appendChild(anchor);
+      _lastGrpCls = grpCls;
+
+      // Now render remaining tags in this group (excluding the first one already rendered)
+      _grp.tags.filter(function(t){ return tags[t] && t !== firstTag; }).forEach(function(t2){
+        var btn2 = makeTagBtn(t2, grpCls, tags, _grp, _grpBtns, _grpTagBtns, syncGroupBtn);
+        _grpTagBtns[grpCls].push(btn2);
+        strip.appendChild(btn2);
+      });
+      return; // don't fall through to the per-tag rendering below
+    }
+
+    // Tags not belonging to any named group (edge case: unknown tags)
+    if(!_grp || grpCls === _lastGrpCls) {
+      // Only render if not already rendered above as part of group logic
+      if (!_grp) {
+        var btn=document.createElement('button');
+        btn.className='tag-filter-btn tg-other';
+        btn.textContent=tag+' ('+(tags[tag]||0)+')'; btn.dataset.tag=tag;
+        btn.addEventListener('click',function(){
+          if(notMode){
+            if(excludeTags.has(tag)){ excludeTags.delete(tag); btn.classList.remove('excluded'); }
+            else { activeTags.delete(tag); btn.classList.remove('active'); excludeTags.add(tag); btn.classList.add('excluded'); }
+          } else {
+            if(activeTags.has(tag)){ activeTags.delete(tag); btn.classList.remove('active'); }
+            else { excludeTags.delete(tag); btn.classList.remove('excluded'); activeTags.add(tag); btn.classList.add('active'); }
+          }
+          applyFilters();
+        });
+        strip.appendChild(btn);
+      }
+    }
   });
 
+  // Helper: build a tag button that syncs its group button on click
+  function makeTagBtn(tag, grpCls, tagCounts, grp, grpBtns, grpTagBtns, syncFn) {
+    var btn=document.createElement('button');
+    btn.className='tag-filter-btn '+grpCls;
+    btn.textContent=tag+' ('+(tagCounts[tag]||0)+')'; btn.dataset.tag=tag;
+    if (activeTags.has(tag)) btn.classList.add('active');
+    if (excludeTags.has(tag)) btn.classList.add('excluded');
+    btn.addEventListener('click',function(){
+      if(notMode){
+        if(excludeTags.has(tag)){ excludeTags.delete(tag); btn.classList.remove('excluded'); }
+        else { activeTags.delete(tag); btn.classList.remove('active'); excludeTags.add(tag); btn.classList.add('excluded'); }
+      } else {
+        if(activeTags.has(tag)){ activeTags.delete(tag); btn.classList.remove('active'); }
+        else { excludeTags.delete(tag); btn.classList.remove('excluded'); activeTags.add(tag); btn.classList.add('active'); }
+      }
+      if (grp) syncFn(grp);
+      applyFilters();
+    });
+    return btn;
+  }
 
-  // Show events whose endDate is from the start of last month forward.
-  // (The GAS backend only creates events with endDate >= today - LOOKBACK_DAYS,
-  //  so events more than a month old won't be in the calendar anyway.)
-  var _lastMonthStart = new Date();
-  _lastMonthStart.setDate(1);
-  _lastMonthStart.setMonth(_lastMonthStart.getMonth() - 1);
-  filterFrom = _lastMonthStart.toISOString().substring(0, 10);
-  document.getElementById('date-from').value = filterFrom;
+
+  filterFrom=new Date().toISOString().substring(0,10);
+  document.getElementById('date-from').value=filterFrom;
 
   // Build "Seen in" source filter dropdown — aggregators only (not venues).
   // Venue-specific sources (Sophiensaele, HAU, etc.) are browseable via the Venue filter.
@@ -1514,8 +1612,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
-  var _cf1 = new Date(); _cf1.setDate(1); _cf1.setMonth(_cf1.getMonth()-1);
-  filterFrom = _cf1.toISOString().substring(0,10);
+  filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
@@ -1538,8 +1635,7 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
-  var _cf2 = new Date(); _cf2.setDate(1); _cf2.setMonth(_cf2.getMonth()-1);
-  filterFrom = _cf2.toISOString().substring(0,10);
+  filterFrom=new Date().toISOString().substring(0,10);
   tagMode='and';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});

@@ -1082,7 +1082,7 @@ function loadCalendar() {
         venue:(item.location||'').split(',')[0].trim(),
         fullLocation:item.location||'',
         neighborhood:p.location?p.location.split(',').pop().trim():'',
-        price:p.price||'', tags:p.tags||[], summary:summary,
+        price:p.price||'', tags:(p.tags||[]).filter(function(t){return t!=='Museum';}), summary:summary,
         source:normalizeSourceLabel(p.source||''), sourceUrl:p.sourceUrl||'', eventUrl:p.eventUrl||'', officialUrl:p.officialUrl||'', mapsUrl:p.mapsUrl||'',
         rawDescription:item.description||''
       };

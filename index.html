@@ -1388,7 +1388,10 @@ function buildFilters() {
   }
 
 
-  filterFrom=new Date().toISOString().substring(0,10);
+  // Default to start of current month so ongoing exhibitions/multi-day events
+  // that started earlier this month are visible by default.
+  var _today=new Date();
+  filterFrom=new Date(_today.getFullYear(),_today.getMonth(),1).toISOString().substring(0,10);
   document.getElementById('date-from').value=filterFrom;
 
   // Build "Seen in" source filter dropdown — aggregators only (not venues).
@@ -1708,7 +1711,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
-  filterFrom=new Date().toISOString().substring(0,10);
+  filterFrom=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().substring(0,10);
   tagMode='and';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
@@ -1734,7 +1737,7 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
-  filterFrom=new Date().toISOString().substring(0,10);
+  filterFrom=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().substring(0,10);
   tagMode='and';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});

@@ -1176,8 +1176,11 @@ if (_placeTrigger2) {
 
 function loadCalendar() {
   var now=new Date(), fut=new Date(now); fut.setMonth(fut.getMonth()+9);
+  // Use start of current month as timeMin so ongoing exhibitions/multi-day events
+  // that started earlier this month are still included.
+  var monthStart=new Date(now.getFullYear(),now.getMonth(),1);
   var url="https://www.googleapis.com/calendar/v3/calendars/"+encodeURIComponent(CALENDAR_ID)+
-    "/events?key="+API_KEY+"&timeMin="+now.toISOString()+"&timeMax="+fut.toISOString()+
+    "/events?key="+API_KEY+"&timeMin="+monthStart.toISOString()+"&timeMax="+fut.toISOString()+
     "&maxResults=2500&singleEvents=true&orderBy=startTime";
   fetch(url).then(function(r){return r.json();}).then(function(data){
     if (data.error) {

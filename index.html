@@ -558,7 +558,7 @@ var filterVenues  = new Set(); // multi-select, OR
 var filterSources = new Set(); // multi-select, OR
 // filterLangs already declared above
 var filterPrice = ""; // 'free' | 'paid' | 'unknown' | ''
-var tagMode = 'and'; // 'and' | 'or'
+var tagMode = 'or'; // 'and' | 'or'
 var sfwMode = false;
 var filterLangs = new Set();
 var filterPlaceTypes = new Set(); // Indoor/Outdoor/Online/Open Door Day // OR between languages, AND with tag filters
@@ -608,9 +608,9 @@ var TAG_DOT_COLORS = {
   'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524','Vernissage':'#f8a524','Finissage':'#f8a524',
   'Concert':'#2dd4a0','Theater':'#2dd4a0','Dance':'#2dd4a0','Opera':'#2dd4a0','Performance':'#2dd4a0','Film':'#2dd4a0',
   'Literature':'#60a5fa','Talk':'#60a5fa','Poetry':'#60a5fa','Book Club':'#60a5fa',
-  'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162','Drag':'#f9d162',
+  'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162',
   'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d','History':'#c5447d',
-  'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Family':'#e8e4a0',
+  'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Family':'#e8e4a0','Drag':'#e8e4a0','Musical':'#2dd4a0','Ballet':'#2dd4a0',
   'Free':'#4ade80',
   'Indoor':'#6366f1','Outdoor':'#6366f1','Online':'#6366f1',
 };
@@ -710,7 +710,7 @@ var SOURCE_LABELS = {
   'IndexBerlin_Exhibitions':'Index Berlin',
   'IndexBerlin_Events':     'Index Berlin',
   'BerlinEventsWeekly':     'Berlin Events Weekly',
-  'JuliaSchneider':         'Julia Schneider',
+  'JuliaSchneider':         "Julia Schneider's Substack",
   'TheNextDay':             'The Next Day',
   'RA_Berlin':              'Resident Advisor',
   'TipBerlin':              'Tip Berlin',
@@ -906,7 +906,7 @@ function refreshVenueDropdown() {
   // Also always keep selected venues visible
   filterVenues.forEach(function(v){ venueSet[v]=true; });
 
-  var sorted = Object.keys(venueSet).sort();
+  var sorted = Object.keys(venueSet).sort(function(a,b){ return a.localeCompare(b, 'de', {sensitivity:'base'}); });
   _venueDropdown.innerHTML = '';
   // Header row with clear button
   var hdr = document.createElement('div'); hdr.className='venue-dropdown-header';
@@ -1206,7 +1206,17 @@ function loadCalendar() {
         venue:(item.location||'').split(',')[0].trim(),
         fullLocation:item.location||'',
         neighborhood:p.location?p.location.split(',').pop().trim():'',
-        price:p.price||'', tags:(p.tags||[]).filter(function(t){return t!=='Museum';}).map(function(t){return t==='Cinema'?'Film':t;}), summary:summary,
+        price:p.price||'', tags:(p.tags||[]).filter(function(t){
+          var BAD_TAGS = new Set(['Price','Museum Day','Education','Animation','Video games','Open House','Museum day','museum day','museum Day']);
+          // Language tags handled separately in LANG_ORDER — don't show as regular tag pills
+          var LANG_TAGS = new Set(['Belarusian','Yiddish','Persian']);
+          return t!=='Museum' && !BAD_TAGS.has(t) && !LANG_TAGS.has(t);
+        }).map(function(t){
+          if (t==='Cinema') return 'Film';
+          if (t==='Open House') return 'Open Door Day';
+          if (t==='literature') return 'Literature';
+          return t;
+        }), summary:summary,
         source:normalizeSourceLabel(p.source||''), sourceUrl:p.sourceUrl||'', eventUrl:p.eventUrl||'', officialUrl:p.officialUrl||'', mapsUrl:p.mapsUrl||'',
         rawDescription:item.description||''
       };
@@ -1234,11 +1244,11 @@ function buildFilters() {
   refreshPlaceDropdown();
   var TAG_GROUPS=[
     {label:'Art & Visual',  cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Open Studio','Vernissage','Finissage']},
-    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera','Film']},
-    {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club']},
-    {label:'Nightlife',     cls:'tg-nightlife',  tags:['Party','Techno','Festival','Drag','Comedy']},
+    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera','Film','Musical','Ballet','Cinema']},
+    {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club','literature']},
+    {label:'Nightlife',     cls:'tg-nightlife',  tags:['Party','Techno','Festival','Comedy']},
     {label:'Events',        cls:'tg-other',      tags:['Workshop','Guided Tour','Market','Food','History','Open Door Day','Protest']},
-    {label:'Community',     cls:'tg-community',  tags:['Queer','Sexuality','Family']},
+    {label:'Community',     cls:'tg-community',  tags:['Queer','Sexuality','Family','Drag']},
   ];
   // Indoor/Outdoor/Online intentionally excluded from TAG_GROUPS — they live in the Venue type dropdown only
   var LANG_TAGS = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
@@ -1397,9 +1407,10 @@ function buildFilters() {
   // Build "Seen in" source filter dropdown — aggregators only (not venues).
   // Venue-specific sources (Sophiensaele, HAU, etc.) are browseable via the Venue filter.
   var AGGREGATOR_SOURCE_SET = new Set([
-    'Siegessäule','CeeCee','Index Berlin','Berlin Events Weekly','Julia Schneider',
+    'Siegessäule','CeeCee','Index Berlin','Berlin Events Weekly',"Julia Schneider's Substack",
     'The Next Day','Resident Advisor','Tip Berlin','The Berliner','We Are Village',
     'Festival Ticker','Festival Alarm','The Left Berlin','Nordische Botschaften',
+    'Institut Français','Polnisches Institut',
     'Open Door Days','Regular Free Entry'
   ]);
   var sourcesMap={};
@@ -1411,7 +1422,7 @@ function buildFilters() {
   refreshSourceDropdown(rawSources);
 
   // Build language multi-select dropdown (OR internally)
-  var LANG_ORDER = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
+  var LANG_ORDER = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Persian','Yiddish','Belarusian','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
   var activeLangs = LANG_ORDER.filter(function(l){ return tags[l]; });
   _savedLangList = activeLangs; _savedLangCounts = tags;
   refreshLangDropdown(activeLangs, tags);
@@ -1701,6 +1712,9 @@ document.getElementById('cal-prev').addEventListener('click',function(){calMonth
 document.getElementById('cal-next').addEventListener('click',function(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 document.getElementById('cal-today-btn').addEventListener('click',function(){var t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();renderCalendar();});
 document.getElementById('search-input').addEventListener('input',function(){searchQuery=this.value.toLowerCase().trim();applyFilters();});
+// Clear search on page load — browsers may restore form values after refresh
+document.getElementById('search-input').value='';
+searchQuery='';
 // neighborhood filter now uses multi-select dropdown (see refreshNeighDropdown)
 // source-filter select removed — now using multi-select dropdown
 document.getElementById('date-from').addEventListener('change',function(){filterFrom=this.value;applyFilters();});

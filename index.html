@@ -1643,8 +1643,19 @@ function openModal(e) {
   document.getElementById('modal-title').textContent=e.title;
   var meta='';
   if(e.fullLocation){
-    var mapsUrl=e.mapsUrl||('https://www.google.com/maps/search/'+encodeURIComponent(e.fullLocation));
-    meta+='<strong>Where</strong> <a href="'+mapsUrl+'" target="_blank" rel="noopener" class="meta-link">'+esc(e.fullLocation)+' ↗</a><br>';
+    // Remove placeholder parts from location display
+    var PLACEHOLDER_RX=/^(venue unknown|address unknown|unknown venue|unknown|tba|tbd|various.*|mehrere.*|multiple.*|online|berlin)$/i;
+    var locParts=e.fullLocation.split(',').map(function(p){return p.trim();})
+      .filter(function(p){return p&&!PLACEHOLDER_RX.test(p)&&p.toLowerCase()!=='unknown neighborhood';});
+    var cleanLoc=locParts.join(', ');
+    if(cleanLoc){
+      var venueIsReal=cleanLoc.length>4&&!PLACEHOLDER_RX.test(cleanLoc.split(',')[0].trim());
+      if(e.mapsUrl&&venueIsReal){
+        meta+='<strong>Where</strong> <a href="'+esc(e.mapsUrl)+'" target="_blank" rel="noopener" class="meta-link">'+esc(cleanLoc)+' ↗</a><br>';
+      } else {
+        meta+='<strong>Where</strong> '+esc(cleanLoc)+'<br>';
+      }
+    }
   }
   if(e.price) meta+='<strong>Price</strong> '+esc(e.price)+'<br>';
   if(e.source) meta+='<strong>Seen in</strong> '+esc(e.source)+'<br>';

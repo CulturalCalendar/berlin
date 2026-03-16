@@ -428,11 +428,11 @@
   <div class="tag-strip-top">
     <span class="filter-label">Tags</span>
     <div class="tag-mode-wrap">
-      <span class="tag-mode-label lit" id="tag-label-and">AND</span>
-      <div class="tag-toggle-track" id="tag-toggle-track">
+      <span class="tag-mode-label" id="tag-label-and">AND</span>
+      <div class="tag-toggle-track or-mode" id="tag-toggle-track">
         <div class="tag-toggle-knob"></div>
       </div>
-      <span class="tag-mode-label" id="tag-label-or">OR</span>
+      <span class="tag-mode-label lit" id="tag-label-or">OR</span>
       <button class="not-btn" id="not-btn">NOT</button>
     </div>
     <div class="sfw-wrap">
@@ -1433,6 +1433,8 @@ function buildFilters() {
   track.addEventListener('click', function() { setTagMode(tagMode==='and'?'or':'and'); applyFilters(); });
   document.getElementById('tag-label-and').addEventListener('click', function() { setTagMode('and'); applyFilters(); });
   document.getElementById('tag-label-or').addEventListener('click',  function() { setTagMode('or');  applyFilters(); });
+  // Apply default OR mode now that DOM elements exist
+  setTagMode('or');
   // Wire NOT button
   var notBtn = document.getElementById('not-btn');
   if (notBtn) notBtn.addEventListener('click', function() { setNotMode(!notMode); });

@@ -607,7 +607,7 @@ var TAG_DOT_COLORS = {
   'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524',
   'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524','Vernissage':'#f8a524','Finissage':'#f8a524',
   'Concert':'#2dd4a0','Theater':'#2dd4a0','Dance':'#2dd4a0','Opera':'#2dd4a0','Performance':'#2dd4a0','Film':'#2dd4a0',
-  'Literature':'#60a5fa','Talk':'#60a5fa','Poetry':'#60a5fa','Book Club':'#60a5fa',
+  'Literature':'#60a5fa','Talk':'#60a5fa','Poetry':'#60a5fa','Book Club':'#60a5fa','Reading':'#60a5fa',
   'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162',
   'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d','History':'#c5447d',
   'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Family':'#e8e4a0','Drag':'#e8e4a0','Musical':'#2dd4a0','Ballet':'#2dd4a0',
@@ -1207,7 +1207,7 @@ function loadCalendar() {
         fullLocation:item.location||'',
         neighborhood:p.location?p.location.split(',').pop().trim():'',
         price:p.price||'', tags:(p.tags||[]).filter(function(t){
-          var BAD_TAGS = new Set(['Price','Museum Day','Education','Animation','Video games','Open House','Museum day','museum day','museum Day']);
+          var BAD_TAGS = new Set(['Price','Museum Day','Education','Animation','Video games','Video Games','Music','Open House','Museum day','museum day','museum Day']);
           // Language tags handled separately in LANG_ORDER — don't show as regular tag pills
           var LANG_TAGS = new Set(['Belarusian','Yiddish','Persian']);
           return t!=='Museum' && !BAD_TAGS.has(t) && !LANG_TAGS.has(t);
@@ -1245,7 +1245,7 @@ function buildFilters() {
   var TAG_GROUPS=[
     {label:'Art & Visual',  cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Open Studio','Vernissage','Finissage']},
     {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera','Film','Musical','Ballet','Cinema']},
-    {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club','literature']},
+    {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club','literature','Reading']},
     {label:'Nightlife',     cls:'tg-nightlife',  tags:['Party','Techno','Festival','Comedy']},
     {label:'Events',        cls:'tg-other',      tags:['Workshop','Guided Tour','Market','Food','History','Open Door Day','Protest']},
     {label:'Community',     cls:'tg-community',  tags:['Queer','Sexuality','Family','Drag']},
@@ -1726,7 +1726,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
   filterFrom=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().substring(0,10);
-  tagMode='and';
+  tagMode='or';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.tag-filter-btn.excluded').forEach(function(b){b.classList.remove('excluded');});
@@ -1741,7 +1741,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
   closeAllDropdowns();
-  if(_tagTrack) setTagMode('and');
+  if(_tagTrack) setTagMode('or');
   applyFilters();
 });
 
@@ -1752,7 +1752,7 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
   filterFrom=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().substring(0,10);
-  tagMode='and';
+  tagMode='or';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
   document.querySelectorAll('.tag-filter-btn.excluded').forEach(function(b){b.classList.remove('excluded');});
@@ -1767,7 +1767,7 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   document.getElementById('date-to').value='';
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
   closeAllDropdowns();
-  if(_tagTrack) setTagMode('and');
+  if(_tagTrack) setTagMode('or');
   // Return calendar to today's month
   var t=new Date(); calYear=t.getFullYear(); calMonth=t.getMonth();
   if(currentView!=='cal') switchView('cal');

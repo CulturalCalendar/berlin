@@ -1735,7 +1735,7 @@ function renderCalendar() {
   var firstDay=new Date(calYear,calMonth,1), lastDay=new Date(calYear,calMonth+1,0);
   var startOffset=(firstDay.getDay()+6)%7;
   var totalCells=Math.ceil((startOffset+lastDay.getDate())/7)*7;
-  var todayStr=new Date().toISOString().substring(0,10);
+  var todayStr=localDateStr(new Date());
 
   var dayMap={};
   filteredEvents.forEach(function(ev){
@@ -1790,7 +1790,7 @@ function renderCalendar() {
 function renderWeek() {
   var ws = weekStart;
   var we = new Date(ws); we.setDate(ws.getDate()+6);
-  var todayStr = new Date().toISOString().substring(0,10);
+  var todayStr = localDateStr(new Date());
   var weekNum  = getISOWeek(ws);
 
   // Update cal-nav label
@@ -1819,7 +1819,7 @@ function renderWeek() {
   gut.style.cssText='border-right:1px solid var(--border);';
   dowRow.appendChild(gut);
   dates.forEach(function(dd){
-    var ds=dd.toISOString().substring(0,10);
+    var ds=localDateStr(dd);
     var isToday=ds===todayStr;
     var cell=document.createElement('div');
     cell.style.cssText='padding:8px 4px 7px;text-align:center;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;border-right:1px solid var(--border);'+(isToday?'color:var(--accent);font-weight:500;':'color:var(--muted2);');
@@ -1830,7 +1830,7 @@ function renderWeek() {
 
   // ── Bucket events ────────────────────────────────────────────────────────
   var timedByDate={},allDayByDate={};
-  dates.forEach(function(dd){var ds=dd.toISOString().substring(0,10);timedByDate[ds]=[];allDayByDate[ds]=[];});
+  dates.forEach(function(dd){var ds=localDateStr(dd);timedByDate[ds]=[];allDayByDate[ds]=[];});
   filteredEvents.forEach(function(ev){
     if(ev.startTime){
       // Timed event: only appears on its start date
@@ -1838,21 +1838,21 @@ function renderWeek() {
     } else {
       // All-day / date-range event: appears on every day it spans within this week
       dates.forEach(function(dd){
-        var ds=dd.toISOString().substring(0,10);
+        var ds=localDateStr(dd);
         if(ds>=ev.startDate&&ds<=ev.endDate) allDayByDate[ds].push(ev);
       });
     }
   });
 
   // ── All-day row ──────────────────────────────────────────────────────────
-  var hasAnyAllDay=dates.some(function(dd){return allDayByDate[dd.toISOString().substring(0,10)].length>0;});
+  var hasAnyAllDay=dates.some(function(dd){return allDayByDate[localDateStr(dd)].length>0;});
   var adRow=document.createElement('div');
   adRow.style.cssText='display:grid;grid-template-columns:64px repeat(7,minmax(0,1fr));border-left:1px solid var(--border);border-bottom:3px solid var(--border2);min-height:'+(hasAnyAllDay?'32px':'28px')+';background:var(--surface);';
   var adLbl=document.createElement('div');
   adLbl.style.cssText='font-size:11px;font-weight:500;color:var(--muted);padding:6px 8px 0 0;border-right:1px solid var(--border);display:flex;align-items:flex-start;justify-content:flex-end;letter-spacing:0.04em;';
   adLbl.textContent='all day'; adRow.appendChild(adLbl);
   dates.forEach(function(dd){
-    var ds=dd.toISOString().substring(0,10);
+    var ds=localDateStr(dd);
     var isToday=ds===todayStr;
     var cell=document.createElement('div');
     cell.style.cssText='border-right:1px solid var(--border);padding:3px 3px;display:flex;flex-direction:column;gap:2px;min-width:0;'+(isToday?'background:rgba(139,92,246,0.04);':'');
@@ -1880,7 +1880,7 @@ function renderWeek() {
   // ── Collect active hours (only hours with ≥1 event across all 7 days) ──
   var activeHours={};
   dates.forEach(function(dd){
-    var ds=dd.toISOString().substring(0,10);
+    var ds=localDateStr(dd);
     (timedByDate[ds]||[]).forEach(function(ev){
       var h=parseInt(ev.startTime.split(':')[0],10);
       activeHours[h]=true;
@@ -1910,7 +1910,7 @@ function renderWeek() {
 
     // One cell per day
     dates.forEach(function(dd){
-      var ds=dd.toISOString().substring(0,10);
+      var ds=localDateStr(dd);
       var isToday=ds===todayStr;
       var cell=document.createElement('div');
       cell.style.cssText='border-right:1px solid var(--border);padding:3px;display:flex;flex-direction:column;gap:2px;min-width:0;min-height:40px;'+(isToday?'background:rgba(139,92,246,0.04);':'');

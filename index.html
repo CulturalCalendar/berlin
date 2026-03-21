@@ -646,7 +646,7 @@ function isAggregatorUrl(url) {
 
 var TAG_DOT_COLORS = {
   'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524',
-  'Sculpture':'#f8a524','Installation':'#f8a524','Open Studio':'#f8a524','Vernissage/Finissage':'#f8a524','Vernissage':'#f8a524','Finissage':'#f8a524',
+  'Sculpture':'#f8a524','Installation':'#f8a524','Vernissage/Finissage':'#f8a524','Vernissage':'#f8a524','Finissage':'#f8a524',
   'Concert':'#2dd4a0','Theater':'#2dd4a0','Dance':'#2dd4a0','Opera':'#2dd4a0','Performance':'#2dd4a0','Film':'#2dd4a0',
   'Literature':'#60a5fa','Talk':'#60a5fa','Poetry':'#60a5fa','Book Club':'#60a5fa','Reading':'#60a5fa',
   'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162',
@@ -698,7 +698,7 @@ function pillColors(tags) {
 
 var TAG_CLASS_MAP = {
   'Exhibition':'tg-visual','Art':'tg-visual','Photography':'tg-visual','Painting':'tg-visual',
-  'Sculpture':'tg-visual','Installation':'tg-visual','Open Studio':'tg-visual','Vernissage/Finissage':'tg-visual','Vernissage':'tg-visual','Finissage':'tg-visual',
+  'Sculpture':'tg-visual','Installation':'tg-visual','Vernissage/Finissage':'tg-visual','Vernissage':'tg-visual','Finissage':'tg-visual',
   'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing','Performance':'tg-performing','Film':'tg-performing',
   'Literature':'tg-words','Talk':'tg-words','Poetry':'tg-words','Book Club':'tg-words',
   'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife','Drag':'tg-nightlife',
@@ -1312,7 +1312,7 @@ function loadCalendar() {
           return t!=='Museum' && !BAD_TAGS.has(t) && !LANG_TAGS.has(t);
         }).map(function(t){
           if (t==='Cinema') return 'Film';
-          if (t==='Open House') return 'Open Door Day';
+          if (t==='Open House'||t==='Open Studio') return 'Open Door Day';
           if (t==='literature') return 'Literature';
           if (t==='Vernissage'||t==='Finissage') return 'Vernissage/Finissage';
           return t;
@@ -1344,7 +1344,7 @@ function buildFilters() {
   // venue dropdown built dynamically by refreshVenueDropdown()
   refreshPlaceDropdown();
   var TAG_GROUPS=[
-    {label:'Art & Visual',  cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Open Studio','Vernissage/Finissage']},
+    {label:'Art & Visual',  cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Vernissage/Finissage']},
     {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera','Film','Musical','Ballet','Cinema']},
     {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club','literature','Reading']},
     {label:'Nightlife',     cls:'tg-nightlife',  tags:['Party','Techno','Festival','Comedy']},

@@ -1832,14 +1832,16 @@ function renderWeek() {
   var timedByDate={},allDayByDate={};
   dates.forEach(function(dd){var ds=dd.toISOString().substring(0,10);timedByDate[ds]=[];allDayByDate[ds]=[];});
   filteredEvents.forEach(function(ev){
-    var isMulti=ev.startDate!==ev.endDate;
-    dates.forEach(function(dd){
-      var ds=dd.toISOString().substring(0,10);
-      if(ds>=ev.startDate&&ds<=ev.endDate){
-        if(isMulti||!ev.startTime) allDayByDate[ds].push(ev);
-        else timedByDate[ds].push(ev);
-      }
-    });
+    if(ev.startTime){
+      // Timed event: only appears on its start date
+      if(timedByDate[ev.startDate]) timedByDate[ev.startDate].push(ev);
+    } else {
+      // All-day / date-range event: appears on every day it spans within this week
+      dates.forEach(function(dd){
+        var ds=dd.toISOString().substring(0,10);
+        if(ds>=ev.startDate&&ds<=ev.endDate) allDayByDate[ds].push(ev);
+      });
+    }
   });
 
   // ── All-day row ──────────────────────────────────────────────────────────
@@ -1866,7 +1868,7 @@ function renderWeek() {
       } else {
         pill.style.cssText=pill.style.cssText+'border-left:3px solid var(--muted2);padding-left:6px;';
       }
-      pill.innerHTML+='<span style="display:inline-flex;align-items:center;gap:3px;overflow:hidden;text-overflow:ellipsis;min-width:0;">'+(ev.startTime?'<span style="color:var(--muted);font-size:10px;margin-right:2px;">'+esc(ev.startTime)+'</span>':'')+getCalDots(ev.tags||'')+esc(ev.title)+'</span>';
+      pill.innerHTML+='<span style="display:inline-flex;align-items:center;gap:3px;overflow:hidden;text-overflow:ellipsis;min-width:0;">'+getCalDots(ev.tags||[])+esc(ev.title)+'</span>';
       pill.title=ev.title;
       pill.addEventListener('click',function(){openModal(ev);});
       cell.appendChild(pill);
@@ -1880,10 +1882,8 @@ function renderWeek() {
   dates.forEach(function(dd){
     var ds=dd.toISOString().substring(0,10);
     (timedByDate[ds]||[]).forEach(function(ev){
-      if(ev.startTime){
-        var h=parseInt(ev.startTime.split(':')[0],10);
-        activeHours[h]=true;
-      }
+      var h=parseInt(ev.startTime.split(':')[0],10);
+      activeHours[h]=true;
     });
   });
   var hourList=Object.keys(activeHours).map(Number).sort(function(a,b){return a-b;});
@@ -1891,13 +1891,9 @@ function renderWeek() {
   if(hourList.length===0){
     // No timed events — show a quiet message
     var noMsg=document.createElement('div');
-    noMsg.style.cssText='padding:24px;color:var(--muted);font-size:12px;text-align:center;grid-column:1/-1;border-left:1px solid var(--border);';
+    noMsg.style.cssText='padding:24px 24px 24px 80px;color:var(--muted);font-size:12px;border-left:1px solid var(--border);border-top:1px solid var(--border);';
     noMsg.textContent='No timed events this week.';
-    var noRow=document.createElement('div');
-    noRow.style.cssText='display:grid;grid-template-columns:64px repeat(7,minmax(0,1fr));border-left:1px solid var(--border);';
-    var noGut=document.createElement('div');noGut.style.cssText='border-right:1px solid var(--border);';
-    noRow.appendChild(noGut); noRow.appendChild(noMsg);
-    grid.appendChild(noRow);
+    grid.appendChild(noMsg);
   }
 
   // ── One row per active hour ───────────────────────────────────────────────
@@ -1921,7 +1917,7 @@ function renderWeek() {
 
       // All events starting in this hour for this day
       var eventsThisHour=(timedByDate[ds]||[]).filter(function(ev){
-        return ev.startTime && parseInt(ev.startTime.split(':')[0],10)===h;
+        return parseInt(ev.startTime.split(':')[0],10)===h;
       });
 
       eventsThisHour.forEach(function(ev){
@@ -1941,7 +1937,7 @@ function renderWeek() {
         }
         var timeStr=ev.startTime+(ev.endTime?' – '+ev.endTime:'');
         block.innerHTML+='<div style="font-size:10px;color:var(--muted);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(timeStr)+'</div>'+
-          '<div style="font-size:12px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;display:flex;align-items:center;gap:3px;">'+getCalDots(ev.tags||[])+esc(ev.title)+'</div>';
+          '<div style="font-size:12px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+getCalDots(ev.tags||[])+esc(ev.title)+'</div>';
         block.addEventListener('click',function(){openModal(ev);});
         cell.appendChild(block);
       });
@@ -1951,14 +1947,10 @@ function renderWeek() {
     grid.appendChild(row);
   });
 
-  // Scroll to first event hour (or 8am fallback)
+  // Scroll the grid wrap to top so all-day row is visible
   setTimeout(function(){
     var wrap=document.querySelector('.cal-grid-wrap');
-    if(!wrap) return;
-    // Since layout is flow (not fixed height), just scroll to top of timed section
-    var adRowEl=grid.querySelector('div[style*="border-bottom:3px"]');
-    if(adRowEl) adRowEl.scrollIntoView({behavior:'instant',block:'start'});
-    else wrap.scrollTop=0;
+    if(wrap) wrap.scrollTop=0;
   },30);
 }
 

@@ -237,6 +237,31 @@
   .cal-more-btn { display: block; width: 100%; font-size: 11px; color: var(--accent); padding: 1px 5px; margin-top: 1px; background: none; border: none; cursor: pointer; text-align: left; font-family: 'DM Mono', monospace; transition: all 0.1s; }
   .cal-more-btn:hover { color: var(--accent); font-weight: bold ; }
 
+  /* ── Week view ── */
+  #week-view { display:none; overflow-x:hidden; width:100%; }
+  .week-grid { display:grid; grid-template-columns: 60px repeat(7, minmax(0,1fr)); border-left:1px solid var(--border); width:100%; }
+  .week-time-col { border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .week-time-label { height:48px; display:flex; align-items:flex-start; justify-content:flex-end; padding:4px 8px 0 0; font-size:10px; color:var(--muted2); letter-spacing:0.04em; border-right:1px solid var(--border); box-sizing:border-box; }
+  .week-day-col { border-right:1px solid var(--border); min-height:600px; position:relative; }
+  .week-dow-header { display:grid; grid-template-columns: 60px repeat(7, minmax(0,1fr)); border-left:1px solid var(--border); }
+  .week-dow-cell { font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted2); padding:8px 4px 6px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); text-align:center; }
+  .week-dow-cell.week-today { color:var(--accent); font-weight:500; }
+  .week-dow-cell .week-day-num { display:inline-block; width:22px; height:22px; line-height:22px; border-radius:50%; margin-left:4px; }
+  .week-dow-cell.week-today .week-day-num { background:var(--accent); color:#000; }
+  .week-event-block { position:absolute; left:2px; right:2px; min-height:18px; background:var(--surface2); border-radius:2px; font-size:10px; line-height:1.3; padding:2px 4px; cursor:pointer; overflow:hidden; border-left:3px solid var(--accent); transition:background 0.1s; box-sizing:border-box; }
+  .week-event-block:hover { background:var(--surface3); }
+  .week-event-block .wev-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:10px; }
+  .week-event-block .wev-time { color:var(--muted); font-size:9px; }
+  .week-allday-row { display:grid; grid-template-columns: 60px repeat(7, minmax(0,1fr)); border-left:1px solid var(--border); border-bottom:1px solid var(--border2); min-height:24px; }
+  .week-allday-label { font-size:9px; color:var(--muted2); padding:4px 6px; border-right:1px solid var(--border); display:flex; align-items:center; justify-content:flex-end; }
+  .week-allday-cell { border-right:1px solid var(--border); padding:2px; display:flex; flex-direction:column; gap:1px; }
+  .week-allday-pill { font-size:10px; padding:1px 4px; border-radius:2px; background:var(--surface2); border-left:3px solid var(--muted2); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .week-allday-pill:hover { background:var(--surface3); }
+  .week-time-body { display:grid; grid-template-columns: 60px repeat(7, minmax(0,1fr)); border-left:1px solid var(--border); }
+  .week-hour-row { display:contents; }
+  .week-hour-cell { border-right:1px solid var(--border); border-bottom:1px solid var(--border); height:48px; position:relative; }
+  .week-hour-cell.week-col-today { background:rgba(139,92,246,0.03); }
+
   /* ── List/card view ── */
   #list-view { display: none; }
   #events-grid { padding: 24px 40px 60px; display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1px; background: var(--border); }
@@ -367,7 +392,8 @@
         <span class="theme-toggle-label" id="theme-label-light">Light</span>
       </div>
       <div class="view-toggle">
-        <button class="view-btn active" id="btn-cal" onclick="switchView('cal')">&#9783; Calendar</button>
+        <button class="view-btn active" id="btn-cal" onclick="switchView('cal')">&#9783; Month</button>
+        <button class="view-btn" id="btn-week" onclick="switchView('week')">&#9783; Week</button>
         <button class="view-btn" id="btn-list" onclick="switchView('list')">&#9638; Cards</button>
       </div>
     </div>
@@ -466,6 +492,20 @@
       <div class="cal-dow">Sat</div><div class="cal-dow">Sun</div>
     </div>
     <div class="cal-days" id="cal-days"></div>
+  </div>
+</div>
+
+<!-- Week view -->
+<div id="week-view" style="display:none;">
+  <div class="cal-nav" id="week-nav">
+    <button class="cal-nav-btn" id="week-prev">&#8592;</button>
+    <div class="cal-month-label" id="week-label" style="width:auto;min-width:200px;"></div>
+    <button class="cal-nav-btn" id="week-next">&#8594;</button>
+    <button class="cal-today-btn" id="week-today-btn">Today</button>
+  </div>
+  <div class="cal-grid-wrap">
+    <div class="cal-dow-row" id="week-dow-row"></div>
+    <div class="week-grid" id="week-grid"></div>
   </div>
 </div>
 
@@ -1209,8 +1249,35 @@ function loadCalendar() {
         neighborhood:p.location?p.location.split(',').pop().trim():'',
         price:p.price||'', tags:(p.tags||[]).filter(function(t){
           var BAD_TAGS = new Set(['Price','Museum Day','Education','Animation','Video games','Video Games','Music','Open House','Museum day','museum day','museum Day']);
-          // Language tags handled separately in LANG_ORDER — don't show as regular tag pills
-          var LANG_TAGS = new Set(['Belarusian','Yiddish','Persian']);
+          // Language tags are handled via the language dropdown — strip them from tag pills.
+          // This set mirrors LANG_ORDER and catches any language the AI generates.
+          var LANG_TAGS = new Set([
+            'German','English','French','Spanish','Italian','Polish','Turkish','Arabic',
+            'Russian','Ukrainian','Hebrew','Persian','Yiddish','Japanese','Korean','Chinese',
+            'Portuguese','Dutch','Greek','Romanian','Hungarian','Czech','Slovak','Croatian',
+            'Serbian','Bulgarian','Lithuanian','Latvian','Estonian','Finnish','Swedish',
+            'Danish','Norwegian','Icelandic','Belarusian','Georgian','Armenian','Albanian',
+            'Afar','Abkhazian','Afrikaans','Akan','Amharic','Aragonese','Assamese',
+            'Avaric','Avestan','Aymara','Azerbaijani','Bashkir','Bambara','Bislama',
+            'Bosnian','Breton','Burmese','Catalan','Chamorro','Chechen','Chichewa',
+            'Chuvash','Cornish','Corsican','Cree','Divehi','Dzongkha','Esperanto',
+            'Ewe','Faroese','Fijian','Fulah','Galician','Guarani','Gujarati',
+            'Haitian Creole','Hausa','Herero','Hiri Motu','Interlingua','Interlingue',
+            'Inuktitut','Inupiaq','Ido','Indonesian','Igbo','Sichuan Yi','Irish',
+            'Javanese','Kalaallisut','Kannada','Kanuri','Kashmiri','Kazakh',
+            'Central Khmer','Kikuyu','Kinyarwanda','Kirghiz','Komi','Kongo','Kurdish',
+            'Kwanyama','Luxembourgish','Luganda','Limburgish','Lingala','Lao',
+            'Luba-Katanga','Macedonian','Marshallese','Malayalam','Maori','Marathi',
+            'Malay','Malagasy','Maltese','Nauru','Navajo','Norwegian Bokmål',
+            'Norwegian Nynorsk','Ndebele (South)','Ndebele (North)','Nepali','Ndonga',
+            'Ojibwe','Oriya','Oromo','Ossetian','Pali','Pashto','Punjabi','Quechua',
+            'Romansh','Kirundi','Sango','Sanskrit','Sindhi','Northern Sami','Sinhala',
+            'Slovenian','Samoan','Shona','Somali','Southern Sotho','Sundanese','Swahili',
+            'Swati','Tajik','Tamil','Tatar','Telugu','Tigrinya','Tibetan','Turkmen',
+            'Tagalog','Tswana','Tonga','Tsonga','Twi','Tahitian','Uighur','Urdu',
+            'Uzbek','Venda','Vietnamese','Volapük','Walloon','Wolof','Xhosa','Welsh',
+            'Western Frisian','Zhuang','Zulu','Language-Free'
+          ]);
           return t!=='Museum' && !BAD_TAGS.has(t) && !LANG_TAGS.has(t);
         }).map(function(t){
           if (t==='Cinema') return 'Film';
@@ -1282,10 +1349,11 @@ function buildFilters() {
   function syncGroupBtn(grp) {
     var btn = _grpBtns[grp.cls];
     if (!btn) return;
-    // Group is "active" only if ALL of its visible tags are selected
     var visibleTags = grp.tags.filter(function(t){ return tags[t]; });
-    var allActive = visibleTags.length > 0 && visibleTags.every(function(t){ return activeTags.has(t); });
+    var allActive   = visibleTags.length > 0 && visibleTags.every(function(t){ return activeTags.has(t); });
+    var allExcluded = visibleTags.length > 0 && visibleTags.every(function(t){ return excludeTags.has(t); });
     btn.classList.toggle('grp-active', allActive);
+    btn.classList.toggle('excluded', allExcluded);
   }
 
   grouped.forEach(function(tag, idx){
@@ -1310,23 +1378,45 @@ function buildFilters() {
       (function(g, gb) {
         gb.addEventListener('click', function() {
           var visibleTags = g.tags.filter(function(t){ return tags[t]; });
-          var allActive = visibleTags.every(function(t){ return activeTags.has(t); });
-          if (allActive) {
-            // Deselect all tags in group
-            visibleTags.forEach(function(t){
-              activeTags.delete(t);
-              var b = _grpTagBtns[g.cls] && _grpTagBtns[g.cls].find(function(bb){ return bb.dataset.tag===t; });
-              if (b) b.classList.remove('active');
-            });
+          if (notMode) {
+            // NOT mode: toggle exclude state for all tags in group
+            var allExcluded = visibleTags.every(function(t){ return excludeTags.has(t); });
+            if (allExcluded) {
+              // Un-exclude all
+              visibleTags.forEach(function(t){
+                excludeTags.delete(t);
+                var b = _grpTagBtns[g.cls] && _grpTagBtns[g.cls].find(function(bb){ return bb.dataset.tag===t; });
+                if (b) b.classList.remove('excluded');
+              });
+            } else {
+              // Exclude all tags in group (remove from active first)
+              visibleTags.forEach(function(t){
+                activeTags.delete(t);
+                excludeTags.add(t);
+                var b = _grpTagBtns[g.cls] && _grpTagBtns[g.cls].find(function(bb){ return bb.dataset.tag===t; });
+                if (b) { b.classList.remove('active'); b.classList.add('excluded'); }
+              });
+            }
           } else {
-            // Select all tags in group, switch to OR mode
-            visibleTags.forEach(function(t){
-              excludeTags.delete(t);
-              activeTags.add(t);
-              var b = _grpTagBtns[g.cls] && _grpTagBtns[g.cls].find(function(bb){ return bb.dataset.tag===t; });
-              if (b) { b.classList.remove('excluded'); b.classList.add('active'); }
-            });
-            if (tagMode !== 'or') { setTagMode('or'); }
+            // Normal mode: toggle active state for all tags in group
+            var allActive = visibleTags.every(function(t){ return activeTags.has(t); });
+            if (allActive) {
+              // Deselect all tags in group
+              visibleTags.forEach(function(t){
+                activeTags.delete(t);
+                var b = _grpTagBtns[g.cls] && _grpTagBtns[g.cls].find(function(bb){ return bb.dataset.tag===t; });
+                if (b) b.classList.remove('active');
+              });
+            } else {
+              // Select all tags in group, switch to OR mode
+              visibleTags.forEach(function(t){
+                excludeTags.delete(t);
+                activeTags.add(t);
+                var b = _grpTagBtns[g.cls] && _grpTagBtns[g.cls].find(function(bb){ return bb.dataset.tag===t; });
+                if (b) { b.classList.remove('excluded'); b.classList.add('active'); }
+              });
+              if (tagMode !== 'or') { setTagMode('or'); }
+            }
           }
           syncGroupBtn(g);
           applyFilters();
@@ -1423,7 +1513,37 @@ function buildFilters() {
   refreshSourceDropdown(rawSources);
 
   // Build language multi-select dropdown (OR internally)
-  var LANG_ORDER = ['German','English','French','Spanish','Italian','Polish','Japanese','Korean','Arabic','Turkish','Russian','Hebrew','Persian','Yiddish','Belarusian','Portuguese','Dutch','Swedish','Danish','Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese','Language-Free'];
+  // Comprehensive language list — all ISO 639-1 languages (184 total) plus Language-Free.
+  // Most relevant to Berlin context listed first, then all others alphabetically.
+  var LANG_ORDER = [
+    // High-frequency in Berlin cultural context
+    'German','English','French','Spanish','Italian','Polish','Turkish','Arabic',
+    'Russian','Ukrainian','Hebrew','Persian','Yiddish','Japanese','Korean','Chinese',
+    'Portuguese','Dutch','Greek','Romanian','Hungarian','Czech','Slovak','Croatian',
+    'Serbian','Bulgarian','Lithuanian','Latvian','Estonian','Finnish','Swedish',
+    'Danish','Norwegian','Icelandic','Belarusian','Georgian','Armenian','Albanian',
+    // All remaining ISO 639-1 languages alphabetically
+    'Afar','Abkhazian','Afrikaans','Akan','Amharic','Aragonese','Assamese',
+    'Avaric','Avestan','Aymara','Azerbaijani','Bashkir','Bambara','Bislama',
+    'Bosnian','Breton','Burmese','Catalan','Chamorro','Chechen','Chichewa',
+    'Chuvash','Cornish','Corsican','Cree','Divehi','Dzongkha','Esperanto',
+    'Ewe','Faroese','Fijian','Fulah','Galician','Guarani','Gujarati','Haitian Creole',
+    'Hausa','Herero','Hiri Motu','Interlingua','Interlingue','Inuktitut','Inupiaq',
+    'Ido','Indonesian','Igbo','Sichuan Yi','Inuktitut','Irish','Javanese','Kalaallisut',
+    'Kannada','Kanuri','Kashmiri','Kazakh','Central Khmer','Kikuyu','Kinyarwanda',
+    'Kirghiz','Komi','Kongo','Kurdish','Kwanyama','Luxembourgish','Luganda',
+    'Limburgish','Lingala','Lao','Luba-Katanga','Macedonian','Marshallese',
+    'Malayalam','Maori','Marathi','Malay','Malagasy','Maltese','Nauru',
+    'Navajo','Norwegian Bokmål','Norwegian Nynorsk','Ndebele (South)','Ndebele (North)',
+    'Nepali','Ndonga','Ojibwe','Oriya','Oromo','Ossetian','Pali','Pashto',
+    'Punjabi','Quechua','Romansh','Kirundi','Sango','Sanskrit','Sindhi',
+    'Northern Sami','Sinhala','Slovenian','Samoan','Shona','Somali','Southern Sotho',
+    'Sundanese','Swahili','Swati','Tajik','Tamil','Tatar','Telugu','Tigrinya',
+    'Tibetan','Turkmen','Tagalog','Tswana','Tonga','Tsonga','Twi','Tahitian',
+    'Uighur','Urdu','Uzbek','Venda','Vietnamese','Volapük','Walloon','Wolof',
+    'Xhosa','Welsh','Western Frisian','Zhuang','Zulu',
+    'Language-Free'
+  ];
   var activeLangs = LANG_ORDER.filter(function(l){ return tags[l]; });
   _savedLangList = activeLangs; _savedLangCounts = tags;
   refreshLangDropdown(activeLangs, tags);
@@ -1546,6 +1666,7 @@ function applyFilters() {
   document.getElementById('event-count').textContent=filteredEvents.length;
   refreshVenueDropdown();
   if(currentView==='cal') { jumpCalToFirstMatchingMonth(); renderCalendar(); }
+  else if(currentView==='week') renderWeek();
   else renderCards();
 }
 
@@ -1558,7 +1679,9 @@ function switchView(v) {
   var showDateRange=v==='list';
   document.getElementById('date-range-filters').style.display=showDateRange?'flex':'none';
   document.getElementById('date-divider').style.display=showDateRange?'block':'none';
-  if(v==='cal') renderCalendar(); else renderCards();
+  if(v==='cal') renderCalendar();
+  else if(v==='week') renderWeek();
+  else renderCards();
 }
 
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -1725,6 +1848,9 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal(
 document.getElementById('cal-prev').addEventListener('click',function(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
 document.getElementById('cal-next').addEventListener('click',function(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 document.getElementById('cal-today-btn').addEventListener('click',function(){var t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();renderCalendar();});
+document.getElementById('week-prev').addEventListener('click',function(){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()-7);if(currentView==='week')renderWeek();});
+document.getElementById('week-next').addEventListener('click',function(){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()+7);if(currentView==='week')renderWeek();});
+document.getElementById('week-today-btn').addEventListener('click',function(){weekStart=getWeekStart(new Date());if(currentView==='week')renderWeek();});
 document.getElementById('search-input').addEventListener('input',function(){searchQuery=this.value.toLowerCase().trim();applyFilters();});
 // Clear search on page load — browsers may restore form values after refresh
 document.getElementById('search-input').value='';
@@ -1784,7 +1910,7 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   if(_tagTrack) setTagMode('or');
   // Return calendar to today's month
   var t=new Date(); calYear=t.getFullYear(); calMonth=t.getMonth();
-  if(currentView!=='cal') switchView('cal');
+  if(currentView!=='cal') { document.getElementById('week-view').style.display='none'; switchView('cal'); }
   applyFilters();
 });
 

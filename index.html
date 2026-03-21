@@ -600,6 +600,12 @@ function getISOWeek(d) {
   var yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
   return Math.ceil((((date-yearStart)/86400000)+1)/7);
 }
+// Format a Date as YYYY-MM-DD in LOCAL time (toISOString uses UTC, wrong in non-UTC zones)
+function localDateStr(d) {
+  var y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
+  return y+'-'+(m<10?'0':'')+m+'-'+(day<10?'0':'')+day;
+}
+
 var _savedLangList = [], _savedLangCounts = {}; // saved for clear-all rebuild
 
 function esc(s) {

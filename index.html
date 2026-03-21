@@ -1866,7 +1866,7 @@ function renderWeek() {
       } else {
         pill.style.cssText=pill.style.cssText+'border-left:3px solid var(--muted2);padding-left:6px;';
       }
-      pill.innerHTML+=(ev.startTime?'<span style="color:var(--muted);font-size:10px;margin-right:4px;">'+esc(ev.startTime)+'</span>':'')+esc(ev.title);
+      pill.innerHTML+='<span style="display:inline-flex;align-items:center;gap:3px;overflow:hidden;text-overflow:ellipsis;min-width:0;">'+(ev.startTime?'<span style="color:var(--muted);font-size:10px;margin-right:2px;">'+esc(ev.startTime)+'</span>':'')+getCalDots(ev.tags||'')+esc(ev.title)+'</span>';
       pill.title=ev.title;
       pill.addEventListener('click',function(){openModal(ev);});
       cell.appendChild(pill);
@@ -1941,7 +1941,7 @@ function renderWeek() {
         }
         var timeStr=ev.startTime+(ev.endTime?' – '+ev.endTime:'');
         block.innerHTML+='<div style="font-size:10px;color:var(--muted);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(timeStr)+'</div>'+
-          '<div style="font-size:12px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+esc(ev.title)+'</div>';
+          '<div style="font-size:12px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;display:flex;align-items:center;gap:3px;">'+getCalDots(ev.tags||[])+esc(ev.title)+'</div>';
         block.addEventListener('click',function(){openModal(ev);});
         cell.appendChild(block);
       });

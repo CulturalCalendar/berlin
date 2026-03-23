@@ -360,6 +360,116 @@
     .cal-event-pill { font-size: 8px; }
     .cal-dow { letter-spacing: 0; }
   }
+
+  /* ── MOBILE AGENDA VIEW ── */
+  #agenda-view { display: none; }
+  .agenda-day-hdr {
+    padding: 10px 20px 8px; position: sticky; top: 0; z-index: 5;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .agenda-dow { font-size: 10px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--muted2); }
+  .agenda-date-num { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1; color: var(--text); }
+  .agenda-date-num.agenda-today { color: var(--accent); }
+  .agenda-date-rest { font-size: 11px; color: var(--muted); margin-left: 2px; }
+  .agenda-event {
+    padding: 11px 20px 11px 20px; border-bottom: 1px solid var(--border);
+    display: flex; gap: 12px; cursor: pointer; transition: background 0.1s;
+    position: relative; min-height: 44px; align-items: flex-start;
+  }
+  .agenda-event::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--border2);
+  }
+  .agenda-event:active { background: var(--surface2); }
+  .ae-time {
+    font-size: 11px; color: var(--muted); white-space: nowrap;
+    min-width: 40px; padding-top: 3px; flex-shrink: 0;
+  }
+  .ae-body { flex: 1; min-width: 0; }
+  .ae-title { font-family: 'DM Serif Display', serif; font-size: 16px; line-height: 1.3; margin-bottom: 3px; }
+  .ae-venue { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+  .ae-venue b { color: var(--text); font-weight: 400; }
+  .ae-tags { display: flex; gap: 3px; flex-wrap: wrap; }
+  .ae-tag { font-size: 9px; padding: 1px 5px; border-radius: 2px; background: var(--tag-bg); border: 1px solid var(--border2); color: var(--muted); }
+  .ae-tag.tg-visual     { border-color: #f8a524; color: #f8a524; }
+  .ae-tag.tg-performing { border-color: #2dd4a0; color: #2dd4a0; }
+  .ae-tag.tg-screen     { border-color: #e0603e; color: #e0603e; }
+  .ae-tag.tg-words      { border-color: #60a5fa; color: #60a5fa; }
+  .ae-tag.tg-nightlife  { border-color: #f9d162; color: #f9d162; }
+  .ae-tag.tg-other      { border-color: #c5447d; color: #c5447d; }
+  .ae-tag.tg-community  { border-color: #e8e4a0; color: #e8e4a0; }
+  .ae-tag.ae-free       { border-color: #4ade80; color: #4ade80; }
+  body.light .ae-tag { color: var(--text); }
+
+  /* ── MOBILE TAG DRAWER ── */
+  #tag-drawer-toggle {
+    display: none; /* hidden on desktop */
+    width: 100%; padding: 9px 16px; background: var(--surface);
+    border: none; border-bottom: 1px solid var(--border);
+    color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    cursor: pointer; text-align: left; align-items: center; gap: 8px;
+  }
+  #tag-drawer-toggle .tdt-active-pills { display: flex; gap: 4px; flex: 1; overflow: hidden; align-items: center; flex-wrap: nowrap; }
+  #tag-drawer-toggle .tdt-pill {
+    font-size: 10px; padding: 1px 7px; border-radius: 10px;
+    background: rgba(139,92,246,0.15); border: 1px solid var(--accent);
+    color: var(--accent); white-space: nowrap; flex-shrink: 0;
+  }
+  #tag-drawer-toggle .tdt-chevron { margin-left: auto; flex-shrink: 0; transition: transform 0.2s; }
+  #tag-drawer-toggle.open .tdt-chevron { transform: rotate(180deg); }
+  #tag-strip.drawer-collapsed { display: none; } /* mobile collapsed state */
+
+  /* ── MOBILE VIEW BUTTONS (Agenda button, shown only on mobile) ── */
+  #btn-agenda { display: none; }
+
+  /* ── MOBILE @media ── */
+  @media (max-width: 600px) {
+    /* Header compact */
+    header { padding: 12px 14px 10px; gap: 8px; }
+    .site-title { font-size: 22px; }
+    .header-meta { font-size: 10px; }
+    .theme-toggle-wrap { gap: 5px; }
+    .theme-toggle-label { display: none; } /* hide Dark/Light labels */
+
+    /* View toggle: show Agenda button */
+    #btn-agenda { display: inline-block; }
+
+    /* Filters: horizontal scroll strip */
+    #filters {
+      flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+      padding: 8px 14px; gap: 6px; -webkit-overflow-scrolling: touch;
+    }
+    #filters::-webkit-scrollbar { display: none; }
+    #filters .filter-divider { display: none; }
+    #filters .filter-label:first-child { display: none; }
+    #filters select, #filters input[type="text"], #filters input[type="date"] {
+      flex-shrink: 0; font-size: 12px; padding: 6px 10px; border-radius: 16px;
+    }
+    #search-input { width: 120px; }
+    #date-range-filters { flex-wrap: nowrap; }
+
+    /* Tag drawer: show toggle button, collapse strip by default */
+    #tag-drawer-toggle { display: flex; }
+    #tag-strip.drawer-collapsed { display: none; }
+    #tag-strip.drawer-open { display: flex; }
+
+    /* Agenda view shown */
+    #agenda-view { display: block; }
+
+    /* Cal grid wrap padding */
+    .cal-grid-wrap { padding-left: 0; padding-right: 0; }
+    #events-grid { padding: 0; grid-template-columns: 1fr; }
+    .event-card { padding: 14px 16px; }
+
+    /* Week grid on mobile: slightly smaller gutter */
+    /* (week grid already works reasonably — minor tweaks only) */
+
+    /* Day popup full-width */
+    #day-popup { max-width: 100%; border-radius: 0; }
+  }
+
 </style>
 </head>
 <body>
@@ -376,6 +486,7 @@
         <span class="theme-toggle-label" id="theme-label-light">Light</span>
       </div>
       <div class="view-toggle">
+        <button class="view-btn" id="btn-agenda" onclick="switchView('agenda')">&#9776; Agenda</button>
         <button class="view-btn active" id="btn-cal" onclick="switchView('cal')">&#9783; Calendar</button>
         <button class="view-btn" id="btn-list" onclick="switchView('list')">&#9638; Cards</button>
       </div>
@@ -432,6 +543,13 @@
   <div class="filter-divider"></div>
   <button id="clear-btn">Clear all</button>
 </div>
+
+<!-- Mobile tag drawer toggle (hidden on desktop via CSS) -->
+<button id="tag-drawer-toggle" onclick="toggleTagDrawer()">
+  <span style="flex-shrink:0;">Tags</span>
+  <span class="tdt-active-pills" id="tdt-active-pills"></span>
+  <span class="tdt-chevron">&#9660;</span>
+</button>
 
 <div id="tag-strip">
   <div class="tag-strip-top">
@@ -492,6 +610,9 @@
 <div id="list-view">
   <div id="events-grid"></div>
 </div>
+
+<!-- Agenda view (mobile default) -->
+<div id="agenda-view"></div>
 
 <!-- Event detail modal -->
 <div class="modal-overlay" id="modal-overlay">
@@ -1326,7 +1447,8 @@ function loadCalendar() {
     buildFilters();
     applyFilters();
     document.getElementById('status').style.display='none';
-    switchView('cal');
+    switchView(window.innerWidth <= 600 ? 'week' : 'cal');
+    initTagDrawer();
   }).catch(function(err){
     document.getElementById('status').textContent='Failed to load: '+err.message;
   });
@@ -1704,9 +1826,11 @@ function applyFilters() {
   var todayForCount=localDateStr(new Date());
   var upcomingCount=filteredEvents.filter(function(e){return e.endDate>=todayForCount;}).length;
   document.getElementById('event-count').textContent=upcomingCount;
+  updateTagDrawerPills();
   refreshVenueDropdown();
   if(currentView==='cal') { jumpCalToFirstMatchingMonth(); renderCalendar(); }
   else if(currentView==='week') renderWeek();
+  else if(currentView==='agenda') renderAgenda();
   else renderCards();
 }
 
@@ -1727,14 +1851,17 @@ function switchCalMode(mode) {
 function switchView(v) {
   var isCalMode = (v==='cal'||v==='week');
   currentView=v;
+  document.getElementById('btn-agenda').classList.toggle('active', v==='agenda');
   document.getElementById('btn-cal').classList.toggle('active', isCalMode);
   document.getElementById('btn-list').classList.toggle('active', v==='list');
   document.getElementById('calendar-view').style.display = isCalMode ? 'block' : 'none';
   document.getElementById('list-view').style.display = v==='list' ? 'block' : 'none';
+  document.getElementById('agenda-view').style.display = v==='agenda' ? 'block' : 'none';
   var showDateRange = v==='list';
   document.getElementById('date-range-filters').style.display = showDateRange ? 'flex' : 'none';
   document.getElementById('date-divider').style.display = showDateRange ? 'block' : 'none';
   if (isCalMode) switchCalMode(v);
+  else if (v==='agenda') renderAgenda();
   else renderCards();
 }
 
@@ -1968,6 +2095,219 @@ function renderWeek() {
   },30);
 }
 
+
+// ── Tag drawer (mobile) ──────────────────────────────────────────
+function toggleTagDrawer() {
+  var strip = document.getElementById('tag-strip');
+  var btn   = document.getElementById('tag-drawer-toggle');
+  var isOpen = !strip.classList.contains('drawer-collapsed');
+  if (isOpen) {
+    strip.classList.add('drawer-collapsed');
+    btn.classList.remove('open');
+  } else {
+    strip.classList.remove('drawer-collapsed');
+    btn.classList.add('open');
+  }
+}
+
+function updateTagDrawerPills() {
+  var container = document.getElementById('tdt-active-pills');
+  if (!container) return;
+  container.innerHTML = '';
+  var shown = 0;
+  activeTags.forEach(function(t) {
+    if (shown >= 4) return;
+    var pill = document.createElement('span');
+    pill.className = 'tdt-pill';
+    pill.textContent = t;
+    container.appendChild(pill);
+    shown++;
+  });
+  // Update toggle label
+  var btn = document.getElementById('tag-drawer-toggle');
+  if (!btn) return;
+  var lbl = btn.querySelector('span:first-child');
+  if (lbl) lbl.textContent = activeTags.size > 0 ? 'Tags (' + activeTags.size + ' active)' : 'Tags';
+}
+
+// Initialise tag drawer state on mobile
+function initTagDrawer() {
+  if (window.innerWidth <= 600) {
+    var strip = document.getElementById('tag-strip');
+    if (strip) strip.classList.add('drawer-collapsed');
+  }
+}
+
+// ── Agenda view ──────────────────────────────────────────────────
+function renderAgenda() {
+  var container = document.getElementById('agenda-view');
+  container.innerHTML = '';
+
+  if (filteredEvents.length === 0) {
+    container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:12px;">No events match your filters.</div>';
+    return;
+  }
+
+  var todayStr = localDateStr(new Date());
+
+  // Group events by date — each event appears on every day it spans
+  var byDate = {};
+  var dateOrder = [];
+  filteredEvents.forEach(function(ev) {
+    var cur = new Date(ev.startDate + 'T12:00:00');
+    var end = new Date(ev.endDate + 'T12:00:00');
+    // Cap at 180 days to avoid runaway loops for very long exhibitions
+    var maxDays = 180;
+    var days = 0;
+    while (cur <= end && days < maxDays) {
+      var ds = localDateStr(cur);
+      if (!byDate[ds]) { byDate[ds] = []; dateOrder.push(ds); }
+      byDate[ds].push(ev);
+      cur.setDate(cur.getDate() + 1);
+      days++;
+    }
+  });
+
+  // Sort dates, show from today onwards first
+  dateOrder.sort();
+  var todayIdx = dateOrder.findIndex(function(d){ return d >= todayStr; });
+  if (todayIdx > 0) dateOrder = dateOrder.slice(todayIdx);
+
+  // Tag → class map (reuse production mapping)
+  var T2C = {
+    'Exhibition':'tg-visual','Art':'tg-visual','Photography':'tg-visual','Painting':'tg-visual',
+    'Sculpture':'tg-visual','Installation':'tg-visual','Vernissage/Finissage':'tg-visual',
+    'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing',
+    'Performance':'tg-performing','Film':'tg-screen','Cinema':'tg-screen','Musical':'tg-performing','Ballet':'tg-performing',
+    'Talk':'tg-words','Literature':'tg-words','Poetry':'tg-words','Book Club':'tg-words','Reading':'tg-words',
+    'Party':'tg-nightlife','Techno':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife','Drag':'tg-nightlife',
+    'Workshop':'tg-other','Guided Tour':'tg-other','Market':'tg-other','Food':'tg-other',
+    'History':'tg-other','Open Door Day':'tg-other','Protest':'tg-other',
+    'Queer':'tg-community','Sexuality':'tg-community','Family':'tg-community',
+  };
+  var SKIP_TAGS = new Set(['Price Unknown','Indoor','Outdoor','Online','Explicit',
+    'German','English','French','Spanish','Italian','Polish','Japanese','Korean',
+    'Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish',
+    'Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese',
+    'Language-Free']);
+
+  var DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  dateOrder.forEach(function(ds) {
+    var dayEvs = byDate[ds];
+    if (!dayEvs || dayEvs.length === 0) return;
+
+    var d = new Date(ds + 'T12:00:00');
+    var isToday = ds === todayStr;
+
+    // Day header
+    var hdr = document.createElement('div');
+    hdr.className = 'agenda-day-hdr';
+    if (isToday) hdr.style.background = 'var(--surface)';
+    var dowEl = document.createElement('span');
+    dowEl.className = 'agenda-dow';
+    dowEl.textContent = DOW_SHORT[d.getDay()];
+    var numEl = document.createElement('span');
+    numEl.className = 'agenda-date-num' + (isToday ? ' agenda-today' : '');
+    numEl.textContent = d.getDate();
+    var restEl = document.createElement('span');
+    restEl.className = 'agenda-date-rest';
+    restEl.textContent = MONTHS_SHORT[d.getMonth()] + ' ' + d.getFullYear();
+    hdr.appendChild(dowEl);
+    hdr.appendChild(numEl);
+    hdr.appendChild(restEl);
+    container.appendChild(hdr);
+
+    // Sort events: timed first (by time), then all-day
+    dayEvs = dayEvs.slice().sort(function(a, b) {
+      if (!a.startTime && !b.startTime) return 0;
+      if (!a.startTime) return 1;
+      if (!b.startTime) return -1;
+      return a.startTime < b.startTime ? -1 : 1;
+    });
+
+    // Event rows
+    dayEvs.forEach(function(ev) {
+      var row = document.createElement('div');
+      row.className = 'agenda-event';
+
+      // Colour bar from pillColors
+      var pcols = pillColors(ev.tags || []);
+      if (pcols.length === 1) {
+        row.style.setProperty('--ae-bar', pcols[0]);
+        row.style.cssText += '; ';
+        // Use ::before via inline override trick: add a wrapper
+      }
+      // Apply colour bar via inline style on ::before (use box-shadow workaround)
+      var barCol = pcols.length > 0 ? pcols[0] : 'var(--border2)';
+      row.style.cssText = 'box-shadow: inset 3px 0 0 ' + barCol + ';';
+
+      // Time
+      var timeEl = document.createElement('div');
+      timeEl.className = 'ae-time';
+      timeEl.textContent = ev.startTime || 'all day';
+      row.appendChild(timeEl);
+
+      // Body
+      var body = document.createElement('div');
+      body.className = 'ae-body';
+
+      // Free dot
+      var isFree = (ev.tags || []).indexOf('Free') !== -1;
+
+      var titleEl = document.createElement('div');
+      titleEl.className = 'ae-title';
+      titleEl.textContent = (isFree ? '● ' : '') + ev.title;
+      if (isFree) titleEl.style.cssText = 'color:inherit;';
+      // Green dot for free
+      if (isFree) {
+        titleEl.innerHTML = '<span style="color:#4ade80;font-size:8px;vertical-align:middle;margin-right:4px;">●</span>' + esc(ev.title);
+      } else {
+        titleEl.textContent = ev.title;
+      }
+      body.appendChild(titleEl);
+
+      if (ev.venue) {
+        var venueEl = document.createElement('div');
+        venueEl.className = 'ae-venue';
+        venueEl.innerHTML = '<b>' + esc(ev.venue) + '</b>' + (ev.neighborhood ? ' · ' + esc(ev.neighborhood) : '');
+        body.appendChild(venueEl);
+      }
+
+      // Tags (skip price/language/place tags)
+      var visibleTags = (ev.tags || []).filter(function(t) {
+        return !SKIP_TAGS.has(t) && t !== 'Free';
+      }).slice(0, 4);
+      if (visibleTags.length > 0) {
+        var tagsEl = document.createElement('div');
+        tagsEl.className = 'ae-tags';
+        visibleTags.forEach(function(t) {
+          var span = document.createElement('span');
+          span.className = 'ae-tag ' + (T2C[t] || '');
+          span.textContent = t;
+          tagsEl.appendChild(span);
+        });
+        if (isFree) {
+          var freeSpan = document.createElement('span');
+          freeSpan.className = 'ae-tag ae-free';
+          freeSpan.textContent = 'Free';
+          tagsEl.insertBefore(freeSpan, tagsEl.firstChild);
+        }
+        body.appendChild(tagsEl);
+      }
+
+      row.appendChild(body);
+      row.addEventListener('click', function() { openModal(ev); });
+      container.appendChild(row);
+    });
+  });
+
+  if (container.children.length === 0) {
+    container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:12px;">No upcoming events.</div>';
+  }
+}
+
 function renderCards() {
   var grid=document.getElementById('events-grid'); grid.innerHTML='';
   if(filteredEvents.length===0){grid.innerHTML='<div class="no-results">No events match your filters.</div>';return;}
@@ -2114,7 +2454,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   document.querySelectorAll('.price-btn').forEach(function(b){b.classList.remove('active');});
   closeAllDropdowns();
   if(_tagTrack) setTagMode('or');
-  if(currentView==='week'){switchCalMode('cal');} else applyFilters();
+  if(currentView==='week'){switchCalMode('cal');} else if(currentView==='agenda'){applyFilters();} else applyFilters();
 });
 
 document.getElementById('site-title-btn').addEventListener('click', function() {
@@ -2142,7 +2482,8 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   if(_tagTrack) setTagMode('or');
   // Return calendar to today's month
   var t=new Date(); calYear=t.getFullYear(); calMonth=t.getMonth();
-  if(currentView!=='cal'&&currentView!=='week') switchView('cal'); else switchCalMode('cal');
+  var defaultV = window.innerWidth <= 600 ? 'week' : 'cal';
+  if(currentView!=='cal'&&currentView!=='week'&&currentView!=='agenda') switchView(defaultV); else if(currentView==='agenda') switchView(defaultV); else switchCalMode('cal');
   applyFilters();
 });
 

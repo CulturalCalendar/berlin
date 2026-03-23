@@ -492,7 +492,7 @@
       </div>
     </div>
     <div class="header-meta">
-      <span id="event-count">—</span> upcoming events &nbsp;·&nbsp; live from Google Calendar
+      <span id="event-count">—</span> upcoming events
     </div>
   </div>
 </header>
@@ -773,7 +773,7 @@ var TAG_DOT_COLORS = {
   'Concert':'#2dd4a0','Theater':'#2dd4a0','Dance':'#2dd4a0','Opera':'#2dd4a0','Performance':'#2dd4a0','Film':'#2dd4a0',
   'Literature':'#60a5fa','Talk':'#60a5fa','Poetry':'#60a5fa','Book Club':'#60a5fa','Reading':'#60a5fa',
   'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162',
-  'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d','History':'#c5447d',
+  'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d','History':'#c5447d','Parade':'#c5447d',
   'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Family':'#e8e4a0','Drag':'#e8e4a0','Musical':'#2dd4a0','Ballet':'#2dd4a0',
   'Free':'#4ade80',
   'Indoor':'#6366f1','Outdoor':'#6366f1','Online':'#6366f1',
@@ -825,7 +825,7 @@ var TAG_CLASS_MAP = {
   'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing','Performance':'tg-performing','Film':'tg-performing',
   'Literature':'tg-words','Talk':'tg-words','Poetry':'tg-words','Book Club':'tg-words',
   'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife','Drag':'tg-nightlife',
-  'Workshop':'tg-other','Market':'tg-other','Open Door Day':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other','History':'tg-other',
+  'Workshop':'tg-other','Market':'tg-other','Open Door Day':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other','History':'tg-other','Parade':'tg-other',
   'Queer':'tg-community','Sexuality':'tg-community','Family':'tg-community',
   'Free':'tg-free',
   'Indoor':'tg-place','Outdoor':'tg-place','Online':'tg-place',
@@ -1402,7 +1402,7 @@ function loadCalendar() {
         neighborhood:p.location?p.location.split(',').pop().trim():'',
         price:p.price||'', langs:(p.tags||[]).filter(function(t){ return ALL_LANG_SET.has(t); }),
         tags:(p.tags||[]).filter(function(t){
-          var BAD_TAGS = new Set(['Price','Museum Day','Education','Animation','Video games','Video Games','Music','Open House','Museum day','museum day','museum Day']);
+          var BAD_TAGS = new Set(['Price','Museum Day','Education','Animation','Video games','Video Games','Music','Open House','Museum day','museum day','museum Day','Easter','Culture']);
           // Language tags are handled via the language dropdown — strip them from tag pills.
           // This set mirrors LANG_ORDER and catches any language the AI generates.
           var LANG_TAGS = new Set([
@@ -1438,6 +1438,7 @@ function loadCalendar() {
           if (t==='Open House'||t==='Open Studio') return 'Open Door Day';
           if (t==='literature') return 'Literature';
           if (t==='Vernissage'||t==='Finissage') return 'Vernissage/Finissage';
+          if (t==='Open Air') return 'Outdoor';
           return t;
         }), summary:summary,
         source:normalizeSourceLabel(p.source||''), sourceUrl:p.sourceUrl||'', eventUrl:p.eventUrl||'', officialUrl:p.officialUrl||'', mapsUrl:p.mapsUrl||'',
@@ -1472,7 +1473,7 @@ function buildFilters() {
     {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera','Film','Musical','Ballet','Cinema']},
     {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club','literature','Reading']},
     {label:'Nightlife',     cls:'tg-nightlife',  tags:['Party','Techno','Festival','Comedy']},
-    {label:'Events',        cls:'tg-other',      tags:['Workshop','Guided Tour','Market','Food','History','Open Door Day','Protest']},
+    {label:'Events',        cls:'tg-other',      tags:['Workshop','Guided Tour','Market','Food','History','Open Door Day','Protest','Parade']},
     {label:'Community',     cls:'tg-community',  tags:['Queer','Sexuality','Family','Drag']},
   ];
   // Indoor/Outdoor/Online intentionally excluded from TAG_GROUPS — they live in the Venue type dropdown only
@@ -1877,13 +1878,11 @@ function renderCalendar() {
 
   var dayMap={};
   filteredEvents.forEach(function(ev){
-    var cur=new Date(ev.startDate+'T12:00:00'), end=new Date(ev.endDate+'T12:00:00');
-    while(cur<=end){
-      var ds=cur.toISOString().substring(0,10);
-      if(!dayMap[ds]) dayMap[ds]=[];
-      dayMap[ds].push(ev);
-      cur.setDate(cur.getDate()+1);
-    }
+    // Multi-day events: show only on their START date, not every subsequent day.
+    // The pill-multi class already shows a dashed left bar to indicate it spans multiple days.
+    var ds = ev.startDate;
+    if(!dayMap[ds]) dayMap[ds]=[];
+    dayMap[ds].push(ev);
   });
 
   for(var i=0;i<totalCells;i++){
@@ -1966,6 +1965,13 @@ function renderWeek() {
     cell.style.cssText='padding:8px 4px 7px;text-align:center;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;border-right:1px solid var(--border);'+(isToday?'color:var(--accent);font-weight:500;':'color:var(--muted2);');
     var numStyle='display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;margin-left:3px;font-size:13px;'+(isToday?'background:var(--accent);color:#000;font-weight:700;':'');
     cell.innerHTML=DAYS[(dd.getDay()+6)%7]+' <span style="'+numStyle+'">'+dd.getDate()+'</span>';
+    cell.style.cursor='pointer';
+    (function(cellDs){
+      cell.addEventListener('click', function(){
+        var allForDay = (timedByDate[cellDs]||[]).concat(allDayByDate[cellDs]||[]);
+        if(allForDay.length > 0) openDayPopup(cellDs, allForDay);
+      });
+    })(ds);
     dowRow.appendChild(cell);
   });
 
@@ -2060,6 +2066,15 @@ function renderWeek() {
       var eventsThisHour=(timedByDate[ds]||[]).filter(function(ev){
         return parseInt(ev.startTime.split(':')[0],10)===h;
       });
+
+      // Click on empty cell area opens day popup for that date
+      (function(cellDs, cellDate){
+        cell.style.cursor = 'pointer';
+        cell.addEventListener('click', function(){
+          var allForDay = (timedByDate[cellDs]||[]).concat(allDayByDate[cellDs]||[]);
+          if(allForDay.length > 0) openDayPopup(cellDs, allForDay);
+        });
+      })(ds, dd);
 
       eventsThisHour.forEach(function(ev){
         var pcols2=pillColors(ev.tags||[]);
@@ -2182,7 +2197,7 @@ function renderAgenda() {
     'Talk':'tg-words','Literature':'tg-words','Poetry':'tg-words','Book Club':'tg-words','Reading':'tg-words',
     'Party':'tg-nightlife','Techno':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife','Drag':'tg-nightlife',
     'Workshop':'tg-other','Guided Tour':'tg-other','Market':'tg-other','Food':'tg-other',
-    'History':'tg-other','Open Door Day':'tg-other','Protest':'tg-other',
+    'History':'tg-other','Open Door Day':'tg-other','Protest':'tg-other','Parade':'tg-other',
     'Queer':'tg-community','Sexuality':'tg-community','Family':'tg-community',
   };
   var SKIP_TAGS = new Set(['Price Unknown','Indoor','Outdoor','Online','Explicit',

@@ -1767,11 +1767,11 @@ function renderCalendar() {
     if(dateStr===todayStr) cell.classList.add('today');
     var numEl=document.createElement('div'); numEl.className='cal-day-num'; numEl.textContent=dayNum;
     cell.appendChild(numEl);
-    if(dayEvents.length>0) cell.classList.add('has-events');
     var dayEvents=(dayMap[dateStr]||[]).slice().sort(function(a,b){
       if(!a.startTime&&!b.startTime)return 0; if(!a.startTime)return 1; if(!b.startTime)return -1;
       return a.startTime<b.startTime?-1:1;
     });
+    if(dayEvents.length>0) cell.classList.add('has-events');
     var shown=dayEvents.slice(0,MAX_PILLS), extra=dayEvents.slice(MAX_PILLS);
     shown.forEach(function(ev){
       var pill=document.createElement('button');

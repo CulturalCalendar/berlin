@@ -464,26 +464,27 @@
     #filters > .filter-label,
     #filters > .filter-divider { display: none; }
 
-    /* ROW 1: search group (flex:1) + price group (flex-shrink:0) side by side */
+    /* ROW 1: search group + price group side by side */
     #filters > .filter-group:first-of-type {
       display: flex; align-items: center; flex-wrap: nowrap;
-      padding: 6px 6px 6px 14px; gap: 6px; flex: 1; min-width: 0;
-      overflow: hidden;
+      padding: 7px 0 7px 14px; gap: 6px; flex: 1; min-width: 0;
+      overflow: hidden; order: 1;
     }
     #clear-btn { flex-shrink: 0; }
-    #search-input { flex: 1; min-width: 40px; width: auto; }
+    #search-input { flex: 1; min-width: 0; width: auto; max-width: 120px; }
 
-    /* Price group: right side of row 1, no separate row */
+    /* Price group: right side of row 1 */
     #filters > .filter-group:nth-of-type(3) {
       display: flex; align-items: center; flex-wrap: nowrap;
-      padding: 6px 14px 6px 0; gap: 5px; flex-shrink: 0;
+      padding: 7px 14px 7px 0; gap: 4px; flex-shrink: 0; order: 2;
     }
     #filters > .filter-group:nth-of-type(3) .filter-label { display: none; }
+    #filters > .filter-group:nth-of-type(3) .price-btn { font-size: 10px; padding: 3px 6px; }
 
-    /* Dropdowns group: forced onto its own row (full width = new line) */
+    /* Dropdowns group: forced onto its own row below */
     #filters > .filter-group:nth-of-type(2) {
-      flex-basis: 100%;
-      display: flex; flex-direction: row; flex-wrap: wrap;
+      flex-basis: 100%; order: 3;
+      display: flex; flex-direction: row; flex-wrap: nowrap;
       padding: 6px 14px; gap: 6px;
       overflow-x: auto; overflow-y: hidden;
       overscroll-behavior-x: contain;
@@ -499,14 +500,11 @@
     #source-filter-wrap { order: 3; }
     #lang-filter-wrap   { order: 4; }
     #place-filter-wrap  { order: 5; }
-    #filters > .filter-group:nth-of-type(2)::after {
-      content: ''; display: block; flex-basis: 100%; height: 0; order: 3.5;
-    }
     /* date-range row (Cards view) */
     #filters > #date-range-filters {
       flex-basis: 100%; display: none; padding: 6px 14px; gap: 6px;
       align-items: center; flex-wrap: nowrap; overflow: hidden;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--border); order: 4;
     }
 
     /* Tag drawer: show toggle button, collapse strip by default */
@@ -526,20 +524,9 @@
     #week-grid-wrap { max-width: 100vw; }
     #week-dow-row { max-width: 100vw; }
 
-    /* Week grid on mobile: slightly smaller gutter */
-    /* (week grid already works reasonably — minor tweaks only) */
-
-    /* Week view: uniform font size for all event text (inline styles use no-space format) */
-    .week-grid div[style*="font-size:10px"],
-    .week-grid div[style*="font-size:12px"],
-    .week-grid button[style*="font-size:12px"],
-    #week-grid-wrap div[style*="font-size:12px"],
-    #week-grid-wrap button[style*="font-size:12px"],
-    #week-grid-wrap div[style*="font-size:10px"] {
-      font-size: 11px !important;
-    }
-    /* Time gutter labels in week view */
-    #week-grid-wrap div[style*="font-size:12px;font-weight:500"] {
+    /* Week grid on mobile: uniform 11px for ALL text inside week grid */
+    #week-grid-wrap *, #week-grid-wrap *::before, #week-grid-wrap *::after,
+    #week-dow-row *, #week-dow-row *::before, #week-dow-row *::after {
       font-size: 11px !important;
     }
 
@@ -1538,7 +1525,7 @@ function loadCalendar() {
     buildFilters();
     applyFilters();
     document.getElementById('status').style.display='none';
-    switchView(window.innerWidth <= 600 ? 'week' : 'cal');
+    switchView(window.innerWidth <= 600 ? 'agenda' : 'cal');
     initTagDrawer();
   }).catch(function(err){
     document.getElementById('status').textContent='Failed to load: '+err.message;
@@ -2632,8 +2619,8 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   if(_tagTrack) setTagMode('or');
   // Return calendar to today's month
   var t=new Date(); calYear=t.getFullYear(); calMonth=t.getMonth();
-  var defaultV = window.innerWidth <= 600 ? 'week' : 'cal';
-  if(currentView!=='cal'&&currentView!=='week'&&currentView!=='agenda') switchView(defaultV); else if(currentView==='agenda') switchView(defaultV); else switchCalMode('cal');
+  var defaultV = window.innerWidth <= 600 ? 'agenda' : 'cal';
+  if(currentView!=='cal'&&currentView!=='week'&&currentView!=='agenda') switchView(defaultV); else if(currentView==='agenda') switchView(defaultV); else if(window.innerWidth <= 600) switchView('agenda'); else switchCalMode('cal');
   applyFilters();
 });
 

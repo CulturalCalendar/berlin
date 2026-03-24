@@ -402,6 +402,20 @@
   .ae-tag.ae-free       { border-color: #4ade80; color: #4ade80; }
   body.light .ae-tag { color: var(--text); }
 
+  /* ── DESKTOP TAG STRIP COLLAPSE ── */
+  #tag-strip-collapse-btn {
+    display: flex; align-items: center; justify-content: center;
+    margin-left: auto; background: none; border: 1px solid var(--border2);
+    color: var(--muted2); font-size: 9px; width: 22px; height: 22px;
+    border-radius: 3px; cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+  }
+  #tag-strip-collapse-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #tag-strip.desktop-collapsed #tag-strip-tags { display: none; }
+  #tag-strip.desktop-collapsed #tags-show-more { display: none !important; }
+  #tag-strip.desktop-collapsed #tags-show-less { display: none !important; }
+  #tag-strip.desktop-collapsed { padding-bottom: 4px; }
+  #tag-strip.desktop-collapsed #tag-strip-collapse-btn { transform: rotate(180deg); }
+
   /* ── MOBILE TAG DRAWER ── */
   #tag-drawer-toggle {
     display: none; /* hidden on desktop */
@@ -437,17 +451,49 @@
     /* View toggle: show Agenda button */
     #btn-agenda { display: inline-block; }
 
-    /* Filters: horizontal scroll on mobile */
+    /* Filters: multi-row layout on mobile */
     #filters {
-      flex-wrap: nowrap; overflow-x: auto; padding: 8px 14px; gap: 6px;
+      flex-direction: column; padding: 0; gap: 0; align-items: stretch;
+    }
+    /* All filter-groups become rows */
+    #filters > .filter-label,
+    #filters > .filter-divider { display: none; }
+    #filters > .filter-group,
+    #filters > #date-range-filters { display: flex; padding: 6px 14px; gap: 6px; align-items: center; flex-wrap: nowrap; }
+    #filters > .filter-group + .filter-group { border-top: 1px solid var(--border); }
+
+    /* Row 1: search + clear — clear btn first */
+    #filters > .filter-group:first-of-type { order: 1; flex-wrap: wrap; }
+    #clear-btn { order: -1; }
+    #search-input { flex: 1; min-width: 100px; width: auto; }
+
+    /* Row 2: price buttons */
+    #filters > .filter-group:nth-of-type(3) { order: 2; }
+
+    /* Row 3+4: dropdowns — split into two scrollable rows */
+    #filters > .filter-group:nth-of-type(2) {
+      order: 3; flex-wrap: wrap; row-gap: 0;
+      padding: 0; flex-direction: column; align-items: stretch;
+    }
+    /* Split the 5 dropdowns into two rows using a pseudo-wrapper via display:contents trick */
+    /* Simpler: use overflow-x:auto on the group and allow natural wrapping with max-height */
+    #filters > .filter-group:nth-of-type(2) {
+      display: flex; flex-direction: row; flex-wrap: wrap;
+      padding: 6px 14px 0; gap: 6px; overflow-x: auto;
       scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
-    #filters::-webkit-scrollbar { display: none; }
-    #filters .filter-label:first-child { display: none; }
-    #filters .filter-divider { flex-shrink: 0; }
-    #filters select, #filters input[type="text"], #filters input[type="date"] { flex-shrink: 0; }
-    #search-input { width: 120px; }
-    #clear-btn { flex-shrink: 0; }
+    #filters > .filter-group:nth-of-type(2)::-webkit-scrollbar { display: none; }
+    #filters > .filter-group:nth-of-type(2) .venue-filter-wrap { flex-shrink: 0; }
+    /* Force wrap after 3rd dropdown to create 2 rows */
+    #neigh-filter-wrap { order: 1; }
+    #venue-filter-wrap { order: 2; }
+    #source-filter-wrap { order: 3; }
+    #lang-filter-wrap   { order: 4; }
+    #place-filter-wrap  { order: 5; }
+    /* Add a break after 3rd item: use a full-width spacer */
+    #filters > .filter-group:nth-of-type(2)::after {
+      content: ''; display: block; width: 100%; height: 0; order: 3.5; flex-basis: 100%;
+    }
 
     /* Tag drawer: show toggle button, collapse strip by default */
     #tag-drawer-toggle { display: flex; }
@@ -464,6 +510,9 @@
 
     /* Week grid on mobile: slightly smaller gutter */
     /* (week grid already works reasonably — minor tweaks only) */
+
+    /* Hide desktop collapse btn on mobile (mobile uses tag-drawer-toggle instead) */
+    #tag-strip-collapse-btn { display: none; }
 
     /* Cal nav compact */
     .cal-nav { padding: 10px 10px; gap: 6px; }
@@ -576,7 +625,7 @@
       </div>
       <span class="sfw-label" id="sfw-label-on">SFW</span>
     </div>
-
+    <button id="tag-strip-collapse-btn" onclick="toggleDesktopTagStrip()" title="Collapse tag list">&#9650;</button>
   </div>
   <div class="tag-strip-tags" id="tag-strip-tags"></div>
 </div>
@@ -2159,6 +2208,11 @@ function renderWeek() {
 
 
 // ── Tag drawer (mobile) ──────────────────────────────────────────
+function toggleDesktopTagStrip() {
+  var strip = document.getElementById('tag-strip');
+  strip.classList.toggle('desktop-collapsed');
+}
+
 function toggleTagDrawer() {
   var strip = document.getElementById('tag-strip');
   var btn   = document.getElementById('tag-drawer-toggle');

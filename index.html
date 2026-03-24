@@ -459,59 +459,60 @@
     /* ── MOBILE FILTERS ── */
     #filters {
       display: flex; flex-direction: row; flex-wrap: wrap;
-      padding: 0; gap: 0; overflow: hidden;
+      padding: 0; gap: 0; overflow: visible;
     }
     #filters > .filter-label,
     #filters > .filter-divider { display: none; }
 
-    /* ROW 1: search (flex:1) | price buttons | clear all */
-    #filters > .filter-group:first-of-type {
+    /* ROW 1 (order:1): search → price buttons → clear all */
+    #search-group {
       display: flex; align-items: center; flex-wrap: nowrap;
-      padding: 7px 0 7px 14px; gap: 0; flex: 1; min-width: 0;
-      overflow: hidden; order: 1;
+      padding: 7px 0 7px 14px; gap: 0;
+      flex: 1; min-width: 0; order: 1;
     }
-    #search-input { flex: 1; min-width: 0; width: auto; max-width: 120px; margin-right: 10px; }
+    #search-input { flex: 1; min-width: 0; width: auto; max-width: 110px; margin-right: 10px; }
 
-    /* Price group: touching buttons, gap from search and clear-all via margins */
-    #filters > .filter-group:nth-of-type(3) {
+    #price-group {
       display: flex; align-items: center; flex-wrap: nowrap;
-      padding: 7px 0; gap: 0; flex-shrink: 0; order: 2;
+      padding: 7px 0; gap: 0; flex-shrink: 0; order: 1;
     }
-    #filters > .filter-group:nth-of-type(3) .filter-label { display: none; }
-    #filters > .filter-group:nth-of-type(3) .price-btn {
+    #price-group .price-btn {
       font-size: 10px; padding: 3px 7px;
       border-radius: 0; border-right-width: 0;
     }
-    #filters > .filter-group:nth-of-type(3) .price-btn:first-child { border-radius: 3px 0 0 3px; }
-    #filters > .filter-group:nth-of-type(3) .price-btn:last-child  { border-radius: 0 3px 3px 0; border-right-width: 1px; }
+    #price-group .price-btn:first-child { border-radius: 3px 0 0 3px; }
+    #price-group .price-btn:last-child  { border-radius: 0 3px 3px 0; border-right-width: 1px; }
 
-    /* Clear all: right-padded, spaced from price group */
-    #clear-btn { flex-shrink: 0; order: 3; margin-left: 10px; margin-right: 14px; }
+    #clear-btn { flex-shrink: 0; order: 1; margin-left: 10px; margin-right: 14px; }
 
-    /* Dropdowns group: forced onto its own row below */
-    #filters > .filter-group:nth-of-type(2) {
-      flex-basis: 100%; order: 3;
+    /* ROW 2 (order:2): dropdowns, horizontally scrollable */
+    #dropdown-group {
+      flex-basis: 100%; order: 2;
       display: flex; flex-direction: row; flex-wrap: nowrap;
       padding: 6px 14px; gap: 6px;
-      overflow-x: auto; overflow-y: hidden;
+      overflow-x: auto; overflow-y: visible;
       overscroll-behavior-x: contain;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
-    #filters > .filter-group:nth-of-type(2)::-webkit-scrollbar { display: none; }
-    #filters > .filter-group:nth-of-type(2) .venue-filter-wrap { flex-shrink: 0; }
+    #dropdown-group::-webkit-scrollbar { display: none; }
+    #dropdown-group .venue-filter-wrap { flex-shrink: 0; }
     #neigh-filter-wrap  { order: 1; }
     #venue-filter-wrap  { order: 2; }
     #source-filter-wrap { order: 3; }
     #lang-filter-wrap   { order: 4; }
     #place-filter-wrap  { order: 5; }
+
+    /* On mobile, dropdowns use position:fixed (set by JS) to escape overflow clipping */
+    .venue-dropdown { max-height: 55vh; z-index: 300; }
+
     /* date-range row (Cards view) */
-    #filters > #date-range-filters {
+    #date-range-filters {
       flex-basis: 100%; display: none; padding: 6px 14px; gap: 6px;
       align-items: center; flex-wrap: nowrap; overflow: hidden;
-      border-top: 1px solid var(--border); order: 4;
+      border-top: 1px solid var(--border); order: 3;
     }
 
     /* Tag drawer: show toggle button, collapse strip by default */
@@ -592,7 +593,7 @@
 
 <div id="filters">
   <span class="filter-label">Filter</span>
-  <div class="filter-group">
+  <div class="filter-group" id="search-group">
     <input type="text" id="search-input" placeholder="search…">
   </div>
   <div class="filter-divider"></div>
@@ -603,7 +604,7 @@
     <input type="date" id="date-to">
   </div>
   <div class="filter-divider" id="date-divider" style="display:none"></div>
-  <div class="filter-group">
+  <div class="filter-group" id="dropdown-group">
     <div class="venue-filter-wrap" id="neigh-filter-wrap">
       <button class="venue-filter-trigger" id="neigh-filter-trigger">All neighborhoods ▾</button>
       <div class="venue-dropdown" id="neigh-dropdown"></div>
@@ -627,7 +628,7 @@
   </div>
   <div class="filter-divider"></div>
   <!-- Price filter as inline toggle buttons -->
-  <div class="filter-group">
+  <div class="filter-group" id="price-group">
     <button class="price-btn" data-price="free">Free</button>
     <button class="price-btn" data-price="paid">Paid</button>
     <button class="price-btn" data-price="unknown">Unknown</button>
@@ -1131,7 +1132,7 @@ if (_neighTrigger) {
     e.stopPropagation();
     var opening = !_neighDropdown.classList.contains('open');
     closeAllDropdowns();
-    if (opening) { refreshNeighDropdown(); _neighDropdown.classList.add('open'); }
+    if (opening) { refreshNeighDropdown(); positionDropdownMobile(_neighTrigger, _neighDropdown); _neighDropdown.classList.add('open'); }
   });
   _neighDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
 }
@@ -1202,6 +1203,7 @@ _venueTrigger.addEventListener('click', function(e) {
   closeAllDropdowns();
   if (opening) {
     refreshVenueDropdown(); // rebuild content first
+    positionDropdownMobile(_venueTrigger, _venueDropdown);
     _venueDropdown.classList.add('open');
   }
 });
@@ -1212,6 +1214,17 @@ function closeAllDropdowns() {
   if (_langDropdown)   _langDropdown.classList.remove('open');
   var _pd = document.getElementById('place-dropdown');
   if (_pd) _pd.classList.remove('open');
+}
+// On mobile, position dropdown with fixed coords below its trigger button
+function positionDropdownMobile(trigger, dropdown) {
+  if (window.innerWidth > 600) return;
+  var rect = trigger.getBoundingClientRect();
+  dropdown.style.position = 'fixed';
+  dropdown.style.top = (rect.bottom + 4) + 'px';
+  dropdown.style.left = '14px';
+  dropdown.style.right = '14px';
+  dropdown.style.minWidth = '0';
+  dropdown.style.maxWidth = 'calc(100vw - 28px)';
 }
 document.addEventListener('click', closeAllDropdowns);
 _venueDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
@@ -1259,7 +1272,7 @@ if (_sourceTrigger) {
     e.stopPropagation();
     var opening = !_sourceDropdown.classList.contains('open');
     closeAllDropdowns();
-    if (opening) _sourceDropdown.classList.add('open');
+    if (opening) { positionDropdownMobile(_sourceTrigger, _sourceDropdown); _sourceDropdown.classList.add('open'); }
   });
   _sourceDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
 }
@@ -1341,7 +1354,7 @@ if (_langTrigger) {
     e.stopPropagation();
     var opening = !_langDropdown.classList.contains('open');
     closeAllDropdowns();
-    if (opening) _langDropdown.classList.add('open');
+    if (opening) { positionDropdownMobile(_langTrigger, _langDropdown); _langDropdown.classList.add('open'); }
   });
   _langDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
 }
@@ -1353,7 +1366,7 @@ if (_placeTrigger2) {
     e.stopPropagation();
     var opening = !_placeDropdown2.classList.contains('open');
     closeAllDropdowns();
-    if (opening) _placeDropdown2.classList.add('open');
+    if (opening) { positionDropdownMobile(_placeTrigger2, _placeDropdown2); _placeDropdown2.classList.add('open'); }
   });
   _placeDropdown2.addEventListener('click', function(e) { e.stopPropagation(); });
 }

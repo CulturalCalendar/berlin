@@ -506,7 +506,10 @@
     #place-filter-wrap  { order: 5; }
 
     /* On mobile, dropdowns use position:fixed (set by JS) to escape overflow clipping */
-    .venue-dropdown { max-height: 55vh; z-index: 300; }
+    /* Default: ~half screen width for most dropdowns */
+    .venue-dropdown { max-height: 55vh; z-index: 300; left: 14px !important; right: auto !important; width: 52vw; max-width: 260px; min-width: 160px; }
+    /* Venue type + Language: just wide enough for content */
+    #lang-dropdown, #place-dropdown { width: auto; min-width: 140px; max-width: 200px; }
 
     /* date-range row (Cards view) */
     #date-range-filters {
@@ -1238,9 +1241,7 @@ function positionDropdownMobile(trigger, dropdown) {
   dropdown.style.position = 'fixed';
   dropdown.style.top = (rect.bottom + 4) + 'px';
   dropdown.style.left = '14px';
-  dropdown.style.right = '14px';
-  dropdown.style.minWidth = '0';
-  dropdown.style.maxWidth = 'calc(100vw - 28px)';
+  dropdown.style.right = '';
   dropdown.style.zIndex = '9999';
 }
 document.addEventListener('click', closeAllDropdowns);
@@ -1580,9 +1581,46 @@ function loadCalendar() {
 
 function buildFilters() {
   var nh={},v={},tags={},langCounts={};
-  var NH_EXCLUDE = new Set(['Venue unknown', 'Unknown neighborhood', 'Online', 'Berlin']);
+  // Allowlist of all 97 official Berlin Ortsteile — only these appear in the neighborhood filter.
+  // This prevents venue names and non-neighborhood strings from polluting the dropdown.
+  var NH_ALLOWLIST = new Set([
+    // Mitte
+    'Mitte','Tiergarten','Wedding','Gesundbrunnen','Hansaviertel','Moabit',
+    // Friedrichshain-Kreuzberg
+    'Friedrichshain','Kreuzberg',
+    // Pankow
+    'Prenzlauer Berg','Weißensee','Pankow','Blankenburg','Blankenfelde','Buch',
+    'Französisch Buchholz','Heinersdorf','Karow','Malchow','Niederschönhausen',
+    'Rosenthal','Stadtrandsiedlung Malchow','Wilhelmsruh',
+    // Charlottenburg-Wilmersdorf
+    'Charlottenburg','Charlottenburg-Nord','Grunewald','Halensee','Schmargendorf',
+    'Westend','Wilmersdorf',
+    // Spandau
+    'Spandau','Falkenhagener Feld','Gatow','Hakenfelde','Haselhorst','Kladow',
+    'Siemensstadt','Staaken','Wilhelmstadt',
+    // Steglitz-Zehlendorf
+    'Steglitz','Zehlendorf','Dahlem','Lankwitz','Lichterfelde','Nikolassee',
+    'Schlachtensee','Wannsee',
+    // Tempelhof-Schöneberg
+    'Schöneberg','Tempelhof','Friedenau','Lichtenrade','Mariendorf','Marienfelde',
+    // Neukölln
+    'Neukölln','Britz','Buckow','Gropiusstadt','Rudow',
+    // Treptow-Köpenick
+    'Treptow','Köpenick','Adlershof','Alt-Treptow','Altglienicke','Baumschulenweg',
+    'Bohnsdorf','Grünau','Johannisthal','Karolinenhof','Köpenick','Müggelheim',
+    'Niederschöneweide','Oberschöneweide','Plänterwald','Rahnsdorf','Schmöckwitz',
+    // Marzahn-Hellersdorf
+    'Marzahn','Hellersdorf','Biesdorf','Kaulsdorf','Mahlsdorf',
+    // Lichtenberg
+    'Lichtenberg','Hohenschönhausen','Alt-Hohenschönhausen','Falkenberg',
+    'Fennpfuhl','Friedrichsfelde','Karlshorst','Lichtenberg','Malchow',
+    'Neu-Hohenschönhausen','Rummelsburg','Wartenberg',
+    // Reinickendorf
+    'Reinickendorf','Frohnau','Heiligensee','Hermsdorf','Konradshöhe','Lübars',
+    'Märkisches Viertel','Tegel','Tegelort','Waidmannslust','Wittenau',
+  ]);
   allEvents.forEach(function(e){
-    if(e.neighborhood && !NH_EXCLUDE.has(e.neighborhood)) nh[e.neighborhood]=true;
+    if(e.neighborhood && NH_ALLOWLIST.has(e.neighborhood)) nh[e.neighborhood]=true;
     if(e.venue) v[e.venue]=true;
     (e.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});
     (e.langs||[]).forEach(function(l){langCounts[l]=(langCounts[l]||0)+1;});

@@ -1208,16 +1208,32 @@ _venueTrigger.addEventListener('click', function(e) {
   }
 });
 function closeAllDropdowns() {
-  _venueDropdown.classList.remove('open');
-  if (_neighDropdown)  _neighDropdown.classList.remove('open');
-  if (_sourceDropdown) _sourceDropdown.classList.remove('open');
-  if (_langDropdown)   _langDropdown.classList.remove('open');
-  var _pd = document.getElementById('place-dropdown');
-  if (_pd) _pd.classList.remove('open');
+  [_venueDropdown, _neighDropdown, _sourceDropdown, _langDropdown,
+   document.getElementById('place-dropdown')].forEach(function(dd) {
+    if (!dd) return;
+    dd.classList.remove('open');
+    // Restore to original parent if it was moved to body for mobile positioning
+    if (dd._originalParent && dd.parentNode === document.body) {
+      dd._originalParent.appendChild(dd);
+      dd._originalParent = null;
+      dd.style.position = '';
+      dd.style.top = '';
+      dd.style.left = '';
+      dd.style.right = '';
+      dd.style.minWidth = '';
+      dd.style.maxWidth = '';
+      dd.style.zIndex = '';
+    }
+  });
 }
-// On mobile, position dropdown with fixed coords below its trigger button
+// On mobile, move dropdown to body and position with fixed coords below trigger
 function positionDropdownMobile(trigger, dropdown) {
   if (window.innerWidth > 600) return;
+  // Move to body so overflow:hidden on ancestors cannot clip it
+  if (dropdown.parentNode !== document.body) {
+    dropdown._originalParent = dropdown.parentNode;
+    document.body.appendChild(dropdown);
+  }
   var rect = trigger.getBoundingClientRect();
   dropdown.style.position = 'fixed';
   dropdown.style.top = (rect.bottom + 4) + 'px';
@@ -1225,6 +1241,7 @@ function positionDropdownMobile(trigger, dropdown) {
   dropdown.style.right = '14px';
   dropdown.style.minWidth = '0';
   dropdown.style.maxWidth = 'calc(100vw - 28px)';
+  dropdown.style.zIndex = '9999';
 }
 document.addEventListener('click', closeAllDropdowns);
 _venueDropdown.addEventListener('click', function(e) { e.stopPropagation(); });

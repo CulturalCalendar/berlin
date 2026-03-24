@@ -63,11 +63,7 @@
   .view-btn.active { background: var(--accent); color: #000; font-weight: 500; }
 
   /* Filters */
-  #filters { padding: 8px 20px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 0; }
-  .filter-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 5px 0; }
-  .filter-row + .filter-row { border-top: 1px solid var(--border); }
-  .filter-row-scroll { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-  .filter-row-scroll::-webkit-scrollbar { display: none; }
+  #filters { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .filter-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; }
   .filter-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .filter-divider { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
@@ -409,10 +405,11 @@
   /* ── MOBILE TAG DRAWER ── */
   #tag-drawer-toggle {
     display: none; /* hidden on desktop */
-    width: 100%; padding: 9px 16px; background: var(--surface);
-    border: none; border-bottom: 1px solid var(--border);
-    color: var(--muted); font-family: 'DM Mono', monospace;
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    width: 100%; padding: 11px 16px; background: var(--surface2);
+    border: none; border-bottom: 2px solid var(--accent);
+    border-top: 1px solid var(--border);
+    color: var(--accent); font-family: 'DM Mono', monospace;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.10em; font-weight: 500;
     cursor: pointer; text-align: left; align-items: center; gap: 8px;
   }
   #tag-drawer-toggle .tdt-active-pills { display: flex; gap: 4px; flex: 1; overflow: hidden; align-items: center; flex-wrap: nowrap; }
@@ -440,11 +437,17 @@
     /* View toggle: show Agenda button */
     #btn-agenda { display: inline-block; }
 
-    /* Filters: compact on mobile */
-    #filters { padding: 0 14px; }
-    .filter-row { padding: 6px 0; gap: 5px; }
-    #filters input[type="text"] { flex-shrink: 0; width: 130px; }
-    #search-input { width: 130px; }
+    /* Filters: horizontal scroll on mobile */
+    #filters {
+      flex-wrap: nowrap; overflow-x: auto; padding: 8px 14px; gap: 6px;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    #filters::-webkit-scrollbar { display: none; }
+    #filters .filter-label:first-child { display: none; }
+    #filters .filter-divider { flex-shrink: 0; }
+    #filters select, #filters input[type="text"], #filters input[type="date"] { flex-shrink: 0; }
+    #search-input { width: 120px; }
+    #clear-btn { flex-shrink: 0; }
 
     /* Tag drawer: show toggle button, collapse strip by default */
     #tag-drawer-toggle { display: flex; }
@@ -491,7 +494,7 @@
       </div>
       <div class="view-toggle">
         <button class="view-btn" id="btn-agenda" onclick="switchView('agenda')">&#9776; Agenda</button>
-        <button class="view-btn" id="btn-cal" onclick="switchView('cal')">&#9783; Calendar</button>
+        <button class="view-btn active" id="btn-cal" onclick="switchView('cal')">&#9783; Calendar</button>
         <button class="view-btn" id="btn-list" onclick="switchView('list')">&#9638; Cards</button>
       </div>
     </div>
@@ -502,28 +505,19 @@
 </header>
 
 <div id="filters">
-  <!-- Row 1: Clear all + Search -->
-  <div class="filter-row" id="filter-row-1">
-    <button id="clear-btn">Clear all</button>
-    <div class="filter-divider"></div>
+  <span class="filter-label">Filter</span>
+  <div class="filter-group">
     <input type="text" id="search-input" placeholder="search…">
-    <div class="filter-divider" id="date-divider" style="display:none"></div>
-    <div id="date-range-filters" style="display:none;align-items:center;gap:6px;">
-      <span class="filter-label">from</span>
-      <input type="date" id="date-from">
-      <span class="filter-label">to</span>
-      <input type="date" id="date-to">
-    </div>
   </div>
-  <!-- Row 2: Price buttons -->
-  <div class="filter-row" id="filter-row-2">
-    <span class="filter-label">Price</span>
-    <button class="price-btn" data-price="free">Free</button>
-    <button class="price-btn" data-price="paid">Paid</button>
-    <button class="price-btn" data-price="unknown">Unknown</button>
+  <div class="filter-divider"></div>
+  <div class="filter-group" id="date-range-filters" style="display:none">
+    <span class="filter-label">from</span>
+    <input type="date" id="date-from">
+    <span class="filter-label">to</span>
+    <input type="date" id="date-to">
   </div>
-  <!-- Row 3: Dropdowns row 1 -->
-  <div class="filter-row filter-row-scroll" id="filter-row-3">
+  <div class="filter-divider" id="date-divider" style="display:none"></div>
+  <div class="filter-group">
     <div class="venue-filter-wrap" id="neigh-filter-wrap">
       <button class="venue-filter-trigger" id="neigh-filter-trigger">All neighborhoods ▾</button>
       <div class="venue-dropdown" id="neigh-dropdown"></div>
@@ -536,9 +530,6 @@
       <button class="venue-filter-trigger" id="source-filter-trigger">Seen in… ▾</button>
       <div class="venue-dropdown" id="source-dropdown"></div>
     </div>
-  </div>
-  <!-- Row 4: Dropdowns row 2 -->
-  <div class="filter-row filter-row-scroll" id="filter-row-4">
     <div class="venue-filter-wrap" id="lang-filter-wrap">
       <button class="venue-filter-trigger" id="lang-filter-trigger">Language ▾</button>
       <div class="venue-dropdown" id="lang-dropdown"></div>
@@ -548,6 +539,16 @@
       <div class="venue-dropdown" id="place-dropdown"></div>
     </div>
   </div>
+  <div class="filter-divider"></div>
+  <!-- Price filter as inline toggle buttons -->
+  <div class="filter-group">
+    <span class="filter-label">Price</span>
+    <button class="price-btn" data-price="free">Free</button>
+    <button class="price-btn" data-price="paid">Paid</button>
+    <button class="price-btn" data-price="unknown">Unknown</button>
+  </div>
+  <div class="filter-divider"></div>
+  <button id="clear-btn">Clear all</button>
 </div>
 
 <!-- Mobile tag drawer toggle (hidden on desktop via CSS) -->
@@ -591,8 +592,8 @@
     <div class="cal-month-label" id="cal-month-label"></div>
     <button class="cal-nav-btn" id="cal-next">&#8594;</button>
     <div class="cal-view-toggle">
-      <button class="cal-view-btn" id="btn-month">Month</button>
-      <button class="cal-view-btn cal-view-active" id="btn-week">Week</button>
+      <button class="cal-view-btn cal-view-active" id="btn-month">Month</button>
+      <button class="cal-view-btn" id="btn-week">Week</button>
     </div>
     <button class="cal-today-btn" id="cal-today-btn">&#8594; Today</button>
   </div>
@@ -1455,7 +1456,7 @@ function loadCalendar() {
     buildFilters();
     applyFilters();
     document.getElementById('status').style.display='none';
-    switchView('week');
+    switchView(window.innerWidth <= 600 ? 'week' : 'cal');
     initTagDrawer();
   }).catch(function(err){
     document.getElementById('status').textContent='Failed to load: '+err.message;

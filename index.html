@@ -1240,8 +1240,12 @@ function positionDropdownMobile(trigger, dropdown) {
   var rect = trigger.getBoundingClientRect();
   dropdown.style.position = 'fixed';
   dropdown.style.top = (rect.bottom + 4) + 'px';
-  dropdown.style.left = '14px';
+  // Align with trigger's left edge, clamped 14px from each screen edge
+  var leftPos = Math.max(14, rect.left);
+  dropdown.style.left = leftPos + 'px';
   dropdown.style.right = '';
+  // Prevent overflow past right edge
+  dropdown.style.maxWidth = (window.innerWidth - leftPos - 14) + 'px';
   dropdown.style.zIndex = '9999';
 }
 document.addEventListener('click', closeAllDropdowns);

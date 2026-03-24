@@ -464,22 +464,29 @@
     #filters > .filter-label,
     #filters > .filter-divider { display: none; }
 
-    /* ROW 1: search group + price group side by side */
+    /* ROW 1: search (flex:1) | price buttons | clear all */
     #filters > .filter-group:first-of-type {
       display: flex; align-items: center; flex-wrap: nowrap;
-      padding: 7px 0 7px 14px; gap: 6px; flex: 1; min-width: 0;
+      padding: 7px 0 7px 14px; gap: 0; flex: 1; min-width: 0;
       overflow: hidden; order: 1;
     }
-    #clear-btn { flex-shrink: 0; }
-    #search-input { flex: 1; min-width: 0; width: auto; max-width: 120px; }
+    #search-input { flex: 1; min-width: 0; width: auto; max-width: 120px; margin-right: 10px; }
 
-    /* Price group: right side of row 1 */
+    /* Price group: touching buttons, gap from search and clear-all via margins */
     #filters > .filter-group:nth-of-type(3) {
       display: flex; align-items: center; flex-wrap: nowrap;
-      padding: 7px 14px 7px 0; gap: 4px; flex-shrink: 0; order: 2;
+      padding: 7px 0; gap: 0; flex-shrink: 0; order: 2;
     }
     #filters > .filter-group:nth-of-type(3) .filter-label { display: none; }
-    #filters > .filter-group:nth-of-type(3) .price-btn { font-size: 10px; padding: 3px 6px; }
+    #filters > .filter-group:nth-of-type(3) .price-btn {
+      font-size: 10px; padding: 3px 7px;
+      border-radius: 0; border-right-width: 0;
+    }
+    #filters > .filter-group:nth-of-type(3) .price-btn:first-child { border-radius: 3px 0 0 3px; }
+    #filters > .filter-group:nth-of-type(3) .price-btn:last-child  { border-radius: 0 3px 3px 0; border-right-width: 1px; }
+
+    /* Clear all: right-padded, spaced from price group */
+    #clear-btn { flex-shrink: 0; order: 3; margin-left: 10px; margin-right: 14px; }
 
     /* Dropdowns group: forced onto its own row below */
     #filters > .filter-group:nth-of-type(2) {

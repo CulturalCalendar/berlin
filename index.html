@@ -520,15 +520,25 @@
     .cal-grid-wrap { padding-left: 0; padding-right: 0; overflow-x: hidden; }
     #events-grid { padding: 0; grid-template-columns: 1fr; overflow-x: hidden; }
     .event-card { padding: 14px 16px; }
+    .event-title { font-size: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
     /* week grid: allow internal layout but prevent page-level overflow */
     #week-grid-wrap { max-width: 100vw; }
     #week-dow-row { max-width: 100vw; }
 
-    /* Week grid on mobile: uniform 11px for ALL text inside week grid */
+    /* Week grid on mobile: uniform 11px, disable iOS auto text scaling */
+    #week-grid-wrap, #week-dow-row {
+      -webkit-text-size-adjust: none;
+      text-size-adjust: none;
+    }
     #week-grid-wrap *, #week-grid-wrap *::before, #week-grid-wrap *::after,
     #week-dow-row *, #week-dow-row *::before, #week-dow-row *::after {
       font-size: 11px !important;
+      -webkit-text-size-adjust: none;
+      text-size-adjust: none;
     }
+
+    /* Dropdowns: taller on mobile so more items visible */
+    .venue-dropdown { max-height: 55vh; min-width: 180px; }
 
     /* Hide desktop collapse btn on mobile (mobile uses tag-drawer-toggle instead) */
     #tag-strip-collapse-btn { display: none; }
@@ -611,7 +621,6 @@
   <div class="filter-divider"></div>
   <!-- Price filter as inline toggle buttons -->
   <div class="filter-group">
-    <span class="filter-label">Price</span>
     <button class="price-btn" data-price="free">Free</button>
     <button class="price-btn" data-price="paid">Paid</button>
     <button class="price-btn" data-price="unknown">Unknown</button>
@@ -1725,10 +1734,10 @@ function buildFilters() {
   }
 
 
-  // Default to start of current month so ongoing exhibitions/multi-day events
-  // that started earlier this month are visible by default.
+  // Default to today so Cards view shows from current date.
+  // Ongoing multi-day events are still shown because filterFrom checks endDate, not startDate.
   var _today=new Date();
-  filterFrom=new Date(_today.getFullYear(),_today.getMonth(),1).toISOString().substring(0,10);
+  filterFrom=localDateStr(_today);
   document.getElementById('date-from').value=filterFrom;
 
   // Build "Seen in" source filter dropdown — aggregators only (not venues).
@@ -2574,7 +2583,7 @@ document.getElementById('clear-btn').addEventListener('click',function(){
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
-  filterFrom=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().substring(0,10);
+  filterFrom=localDateStr(new Date());
   tagMode='or';
   // Reset UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});
@@ -2600,7 +2609,7 @@ document.getElementById('site-title-btn').addEventListener('click', function() {
   updateSourceTrigger(); updateLangTrigger(); updateVenueTrigger(); updatePlaceTrigger(); refreshPlaceDropdown();
   searchQuery=''; filterNeighborhoods.clear(); filterTo='';
   filterPrice='';
-  filterFrom=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().substring(0,10);
+  filterFrom=localDateStr(new Date());
   tagMode='or';
   // Reset filter UI
   document.querySelectorAll('.tag-filter-btn.active').forEach(function(b){b.classList.remove('active');});

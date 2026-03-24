@@ -457,41 +457,34 @@
     #btn-agenda { display: inline-block; }
 
     /* ── MOBILE FILTERS ── */
-    /* #1: multi-row layout */
     #filters {
-      flex-direction: column; padding: 0; gap: 0; align-items: stretch;
-      overflow: hidden; /* prevent the whole filters from causing page-level hscroll */
+      display: flex; flex-direction: row; flex-wrap: wrap;
+      padding: 0; gap: 0; overflow: hidden;
     }
     #filters > .filter-label,
     #filters > .filter-divider { display: none; }
 
-    /* Row 1: clear btn + search bar + price buttons all on one line */
+    /* ROW 1: search group (flex:1) + price group (flex-shrink:0) side by side */
     #filters > .filter-group:first-of-type {
-      display: flex; flex-wrap: nowrap; align-items: center;
-      padding: 6px 14px; gap: 6px; overflow: hidden;
+      display: flex; align-items: center; flex-wrap: nowrap;
+      padding: 6px 6px 6px 14px; gap: 6px; flex: 1; min-width: 0;
+      overflow: hidden;
     }
-    #clear-btn { order: -1; flex-shrink: 0; }
-    /* search input shrinks to make room for price buttons */
-    #search-input { flex: 1; min-width: 50px; width: auto; max-width: 120px; }
+    #clear-btn { flex-shrink: 0; }
+    #search-input { flex: 1; min-width: 40px; width: auto; }
 
-    /* Price buttons: injected after search in same row via CSS order */
-    /* We move the price group visually into row 1 by giving it order:-1 within filters
-       and zero padding so it flows inline. Instead, we use a simpler approach:
-       hide the original price row and show price buttons appended to row 1 */
-    /* Price group: same row as search — no border, no separate padding */
+    /* Price group: right side of row 1, no separate row */
     #filters > .filter-group:nth-of-type(3) {
-      display: contents; /* children flow into parent flex as if inline */
+      display: flex; align-items: center; flex-wrap: nowrap;
+      padding: 6px 14px 6px 0; gap: 5px; flex-shrink: 0;
     }
-    #filters > .filter-group:nth-of-type(3) .price-btn { flex-shrink: 0; }
     #filters > .filter-group:nth-of-type(3) .filter-label { display: none; }
 
-    /* Row 3+4: dropdowns — isolated scrollable container */
-    /* #2: only THIS row scrolls horizontally; nothing else moves */
+    /* Dropdowns group: forced onto its own row (full width = new line) */
     #filters > .filter-group:nth-of-type(2) {
-      order: 3;
+      flex-basis: 100%;
       display: flex; flex-direction: row; flex-wrap: wrap;
-      padding: 6px 14px 6px; gap: 6px;
-      /* isolate scroll: only this element scrolls, page stays fixed */
+      padding: 6px 14px; gap: 6px;
       overflow-x: auto; overflow-y: hidden;
       overscroll-behavior-x: contain;
       -webkit-overflow-scrolling: touch;
@@ -501,21 +494,19 @@
     }
     #filters > .filter-group:nth-of-type(2)::-webkit-scrollbar { display: none; }
     #filters > .filter-group:nth-of-type(2) .venue-filter-wrap { flex-shrink: 0; }
-    /* Row 1 of dropdowns: neigh, venue, source */
     #neigh-filter-wrap  { order: 1; }
     #venue-filter-wrap  { order: 2; }
     #source-filter-wrap { order: 3; }
-    /* Row 2 of dropdowns: lang, place */
     #lang-filter-wrap   { order: 4; }
     #place-filter-wrap  { order: 5; }
-    /* Force a line break between row 1 and row 2 of dropdowns */
     #filters > .filter-group:nth-of-type(2)::after {
       content: ''; display: block; flex-basis: 100%; height: 0; order: 3.5;
     }
-    /* date-range-filters row (shown in Cards view) */
+    /* date-range row (Cards view) */
     #filters > #date-range-filters {
-      display: none; padding: 6px 14px; gap: 6px; align-items: center;
-      flex-wrap: nowrap; overflow: hidden; border-top: 1px solid var(--border);
+      flex-basis: 100%; display: none; padding: 6px 14px; gap: 6px;
+      align-items: center; flex-wrap: nowrap; overflow: hidden;
+      border-top: 1px solid var(--border);
     }
 
     /* Tag drawer: show toggle button, collapse strip by default */
@@ -2218,7 +2209,7 @@ function renderWeek() {
       eventsThisHour.forEach(function(ev){
         var pcols2=pillColors(ev.tags||[]);
         var block=document.createElement('button');
-        block.style.cssText='position:relative;display:block;width:100%;text-align:left;background:var(--surface2);border:none;border-radius:2px;padding:3px 6px 3px 9px;cursor:pointer;font-family:inherit;color:var(--text);min-width:0;box-sizing:border-box;';
+        block.style.cssText='position:relative;display:block;width:100%;text-align:left;background:var(--surface2);border:none;border-radius:2px;padding:3px 6px 3px 9px;cursor:pointer;font-family:inherit;color:var(--text);min-width:0;box-sizing:border-box;font-size:11px;';
         // Left colour bar
         if(pcols2.length===1){
           block.style.borderLeft='3px solid '+pcols2[0];

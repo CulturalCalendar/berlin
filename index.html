@@ -451,61 +451,45 @@
     /* View toggle: show Agenda button */
     #btn-agenda { display: inline-block; }
 
-    /* ── MOBILE FILTERS ── */
-    /* #1: multi-row layout */
+    /* Filters: multi-row layout on mobile */
     #filters {
-      flex-direction: column; padding: 0; gap: 0; align-items: stretch;
-      overflow: hidden; /* prevent the whole filters from causing page-level hscroll */
+      flex-direction: column; padding: 0; gap: 0; align-items: stretch; overflow-x: hidden;
     }
+    /* Hide all desktop filter labels and dividers */
     #filters > .filter-label,
     #filters > .filter-divider { display: none; }
+    /* All filter-groups are rows with left/right padding */
+    #filters > .filter-group,
+    #filters > #date-range-filters { display: flex; padding: 6px 14px; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: hidden; }
+    #filters > .filter-group + .filter-group { border-top: 1px solid var(--border); }
 
-    /* Row 1: clear btn + search bar */
-    #filters > .filter-group:first-of-type {
-      display: flex; flex-wrap: nowrap; align-items: center;
-      padding: 6px 14px; gap: 6px; overflow: hidden;
-    }
+    /* Row 1 (search group — first .filter-group): clear btn first, then search */
+    #filters > .filter-group:first-of-type { order: 1; flex-wrap: nowrap; }
     #clear-btn { order: -1; flex-shrink: 0; }
     #search-input { flex: 1; min-width: 80px; width: auto; }
 
-    /* Row 2: price buttons (Free / Paid / Unknown) */
-    #filters > .filter-group:nth-of-type(3) {
-      display: flex; flex-wrap: nowrap; align-items: center;
-      padding: 6px 14px; gap: 6px; overflow: hidden;
-      border-top: 1px solid var(--border);
-    }
+    /* Row 2 (price group — third .filter-group): Free/Paid/Unknown */
+    #filters > .filter-group:nth-of-type(3) { order: 2; }
 
-    /* Row 3+4: dropdowns — isolated scrollable container */
-    /* #2: only THIS row scrolls horizontally; nothing else moves */
+    /* Row 3+4 (dropdowns group — second .filter-group): two scrollable rows */
     #filters > .filter-group:nth-of-type(2) {
       order: 3;
       display: flex; flex-direction: row; flex-wrap: wrap;
-      padding: 6px 14px 6px; gap: 6px;
-      /* isolate scroll: only this element scrolls, page stays fixed */
+      padding: 6px 14px 6px; gap: 6px 6px;
       overflow-x: auto; overflow-y: hidden;
-      overscroll-behavior-x: contain;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
     #filters > .filter-group:nth-of-type(2)::-webkit-scrollbar { display: none; }
     #filters > .filter-group:nth-of-type(2) .venue-filter-wrap { flex-shrink: 0; }
-    /* Row 1 of dropdowns: neigh, venue, source */
+    /* Order: first row = neigh, venue, source; second row = lang, place */
     #neigh-filter-wrap  { order: 1; }
     #venue-filter-wrap  { order: 2; }
     #source-filter-wrap { order: 3; }
-    /* Row 2 of dropdowns: lang, place */
     #lang-filter-wrap   { order: 4; }
     #place-filter-wrap  { order: 5; }
-    /* Force a line break between row 1 and row 2 of dropdowns */
+    /* Full-width break forces lang+place onto a second row */
     #filters > .filter-group:nth-of-type(2)::after {
-      content: ''; display: block; flex-basis: 100%; height: 0; order: 3.5;
-    }
-    /* date-range-filters row (shown in Cards view) */
-    #filters > #date-range-filters {
-      display: none; padding: 6px 14px; gap: 6px; align-items: center;
-      flex-wrap: nowrap; overflow: hidden; border-top: 1px solid var(--border);
+      content: ''; flex-basis: 100%; height: 0; order: 3.5;
     }
 
     /* Tag drawer: show toggle button, collapse strip by default */
@@ -521,24 +505,14 @@
     .cal-grid-wrap { padding-left: 0; padding-right: 0; overflow-x: hidden; }
     #events-grid { padding: 0; grid-template-columns: 1fr; overflow-x: hidden; }
     .event-card { padding: 14px 16px; }
-    /* week grid: allow internal layout but prevent page-level overflow */
-    #week-grid-wrap { max-width: 100vw; }
-    #week-dow-row { max-width: 100vw; }
+    .week-grid, #week-grid-wrap, #week-dow-row { overflow-x: hidden; }
 
     /* Week grid on mobile: slightly smaller gutter */
     /* (week grid already works reasonably — minor tweaks only) */
 
-    /* Week view: uniform font size for all event text (inline styles use no-space format) */
+    /* Week view: uniform font size for all event text */
     .week-grid div[style*="font-size:10px"],
-    .week-grid div[style*="font-size:12px"],
-    .week-grid button[style*="font-size:12px"],
-    #week-grid-wrap div[style*="font-size:12px"],
-    #week-grid-wrap button[style*="font-size:12px"],
-    #week-grid-wrap div[style*="font-size:10px"] {
-      font-size: 11px !important;
-    }
-    /* Time gutter labels in week view */
-    #week-grid-wrap div[style*="font-size:12px;font-weight:500"] {
+    .week-grid div[style*="font-size:12px"] {
       font-size: 11px !important;
     }
 

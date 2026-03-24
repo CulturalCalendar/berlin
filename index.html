@@ -436,17 +436,22 @@
   #tag-drawer-toggle.open .tdt-chevron { transform: rotate(180deg); }
   #tag-strip.drawer-collapsed { display: none; } /* mobile collapsed state */
 
-  /* ── MOBILE VIEW BUTTONS (Agenda button, shown only on mobile) ── */
+  /* ── MOBILE-ONLY ELEMENTS (hidden on desktop) ── */
   #btn-agenda { display: none; }
+  #mobile-event-count-wrap { display: none; }
 
   /* ── MOBILE @media ── */
   @media (max-width: 600px) {
     /* Header compact */
     header { padding: 12px 14px 10px; gap: 8px; }
     .site-title { font-size: 22px; }
-    .header-meta { font-size: 10px; }
+    /* Move event count to inline with theme toggle; hide the separate meta row */
+    .header-meta { display: none; }
+    /* Show event count inline in a dedicated mobile span */
+    #mobile-event-count-wrap { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); white-space: nowrap; }
+    /* Show Dark/Light labels so user knows what the toggle does */
+    .theme-toggle-label { display: inline; font-size: 10px; }
     .theme-toggle-wrap { gap: 5px; }
-    .theme-toggle-label { display: none; } /* hide Dark/Light labels */
 
     /* View toggle: show Agenda button */
     #btn-agenda { display: inline-block; }
@@ -460,20 +465,25 @@
     #filters > .filter-label,
     #filters > .filter-divider { display: none; }
 
-    /* Row 1: clear btn + search bar */
+    /* Row 1: clear btn + search bar + price buttons all on one line */
     #filters > .filter-group:first-of-type {
       display: flex; flex-wrap: nowrap; align-items: center;
       padding: 6px 14px; gap: 6px; overflow: hidden;
     }
     #clear-btn { order: -1; flex-shrink: 0; }
-    #search-input { flex: 1; min-width: 80px; width: auto; }
+    /* search input shrinks to make room for price buttons */
+    #search-input { flex: 1; min-width: 50px; width: auto; max-width: 120px; }
 
-    /* Row 2: price buttons (Free / Paid / Unknown) */
+    /* Price buttons: injected after search in same row via CSS order */
+    /* We move the price group visually into row 1 by giving it order:-1 within filters
+       and zero padding so it flows inline. Instead, we use a simpler approach:
+       hide the original price row and show price buttons appended to row 1 */
+    /* Price group: same row as search — no border, no separate padding */
     #filters > .filter-group:nth-of-type(3) {
-      display: flex; flex-wrap: nowrap; align-items: center;
-      padding: 6px 14px; gap: 6px; overflow: hidden;
-      border-top: 1px solid var(--border);
+      display: contents; /* children flow into parent flex as if inline */
     }
+    #filters > .filter-group:nth-of-type(3) .price-btn { flex-shrink: 0; }
+    #filters > .filter-group:nth-of-type(3) .filter-label { display: none; }
 
     /* Row 3+4: dropdowns — isolated scrollable container */
     /* #2: only THIS row scrolls horizontally; nothing else moves */
@@ -571,6 +581,7 @@
           <div class="theme-toggle-knob"></div>
         </div>
         <span class="theme-toggle-label" id="theme-label-light">Light</span>
+        <span id="mobile-event-count-wrap">· <span id="mobile-event-count">—</span> upcoming</span>
       </div>
       <div class="view-toggle">
         <button class="view-btn" id="btn-agenda" onclick="switchView('agenda')">&#9776; Agenda</button>
@@ -1947,6 +1958,7 @@ function applyFilters() {
   var todayForCount=localDateStr(new Date());
   var upcomingCount=filteredEvents.filter(function(e){return e.endDate>=todayForCount;}).length;
   document.getElementById('event-count').textContent=upcomingCount;
+  var mec=document.getElementById('mobile-event-count'); if(mec) mec.textContent=upcomingCount;
   updateTagDrawerPills();
   refreshVenueDropdown();
   if(currentView==='cal') { jumpCalToFirstMatchingMonth(); renderCalendar(); }
@@ -2133,7 +2145,7 @@ function renderWeek() {
     (allDayByDate[ds]||[]).forEach(function(ev){
       var pcols=pillColors(ev.tags||[]);
       var pill=document.createElement('button');
-      pill.style.cssText='position:relative;font-size:12px;line-height:1.3;padding:3px 6px 3px 9px;border-radius:2px;background:var(--surface2);border:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:left;font-family:inherit;color:var(--text);';
+      pill.style.cssText='position:relative;font-size:11px;line-height:1.3;padding:3px 6px 3px 9px;border-radius:2px;background:var(--surface2);border:none;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:left;font-family:inherit;color:var(--text);';
       if(pcols.length===1){
         pill.style.cssText=pill.style.cssText+'border-left:3px solid '+pcols[0]+';padding-left:6px;';
       } else if(pcols.length>1){
@@ -2178,7 +2190,7 @@ function renderWeek() {
 
     // Time gutter cell
     var tCell=document.createElement('div');
-    tCell.style.cssText='font-size:12px;font-weight:500;color:var(--muted);padding:6px 8px 0 0;border-right:1px solid var(--border);text-align:right;white-space:nowrap;min-width:0;';
+    tCell.style.cssText='font-size:11px;font-weight:500;color:var(--muted);padding:6px 8px 0 0;border-right:1px solid var(--border);text-align:right;white-space:nowrap;min-width:0;';
     tCell.textContent=hLabel;
     row.appendChild(tCell);
 
@@ -2219,8 +2231,8 @@ function renderWeek() {
           block.style.paddingLeft='6px';
         }
         var timeStr=ev.startTime+(ev.endTime?' – '+ev.endTime:'');
-        block.innerHTML+='<div style="font-size:10px;color:var(--muted);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(timeStr)+'</div>'+
-          '<div style="font-size:12px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+getCalDots(ev.tags||[])+esc(ev.title)+'</div>';
+        block.innerHTML+='<div style="font-size:11px;color:var(--muted);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(timeStr)+'</div>'+
+          '<div style="font-size:11px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+getCalDots(ev.tags||[])+esc(ev.title)+'</div>';
         block.addEventListener('click',function(){openModal(ev);});
         cell.appendChild(block);
       });

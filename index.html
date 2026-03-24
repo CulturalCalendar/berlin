@@ -1878,11 +1878,13 @@ function renderCalendar() {
 
   var dayMap={};
   filteredEvents.forEach(function(ev){
-    // Multi-day events: show only on their START date, not every subsequent day.
-    // The pill-multi class already shows a dashed left bar to indicate it spans multiple days.
-    var ds = ev.startDate;
-    if(!dayMap[ds]) dayMap[ds]=[];
-    dayMap[ds].push(ev);
+    var cur=new Date(ev.startDate+'T12:00:00'), end=new Date(ev.endDate+'T12:00:00');
+    while(cur<=end){
+      var ds=localDateStr(cur);
+      if(!dayMap[ds]) dayMap[ds]=[];
+      dayMap[ds].push(ev);
+      cur.setDate(cur.getDate()+1);
+    }
   });
 
   for(var i=0;i<totalCells;i++){
@@ -1894,8 +1896,13 @@ function renderCalendar() {
     var numEl=document.createElement('div'); numEl.className='cal-day-num'; numEl.textContent=dayNum;
     cell.appendChild(numEl);
     var dayEvents=(dayMap[dateStr]||[]).slice().sort(function(a,b){
-      if(!a.startTime&&!b.startTime)return 0; if(!a.startTime)return 1; if(!b.startTime)return -1;
-      return a.startTime<b.startTime?-1:1;
+      // Timed single-day events first, sorted by time; then all-day/multi-day events
+      var aAllDay=!a.startTime||a.startDate!==a.endDate;
+      var bAllDay=!b.startTime||b.startDate!==b.endDate;
+      if(!aAllDay&&!bAllDay) return a.startTime<b.startTime?-1:1;
+      if(!aAllDay&&bAllDay)  return -1;
+      if(aAllDay&&!bAllDay)  return 1;
+      return 0;
     });
     if(dayEvents.length>0) cell.classList.add('has-events');
     var shown=dayEvents.slice(0,MAX_PILLS), extra=dayEvents.slice(MAX_PILLS);

@@ -631,7 +631,7 @@
 
 <!-- Mobile tag drawer toggle (hidden on desktop via CSS) -->
 <button id="tag-drawer-toggle" onclick="toggleTagDrawer()">
-  <span style="flex-shrink:0;">Event Tags</span>
+  <span style="flex-shrink:0;">Filter by event type</span>
   <span class="tdt-active-pills" id="tdt-active-pills"></span>
   <span class="tdt-chevron">&#9660;</span>
 </button>
@@ -2273,7 +2273,7 @@ function updateTagDrawerPills() {
   var btn = document.getElementById('tag-drawer-toggle');
   if (!btn) return;
   var lbl = btn.querySelector('span:first-child');
-  if (lbl) lbl.textContent = activeTags.size > 0 ? 'Event Tags (' + activeTags.size + ' active)' : 'Event Tags';
+  if (lbl) lbl.textContent = activeTags.size > 0 ? 'Filter by event type (' + activeTags.size + ' active)' : 'Filter by event type';
 }
 
 // Initialise tag drawer state on mobile

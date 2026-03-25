@@ -867,11 +867,11 @@ function isAggregatorUrl(url) {
 var TAG_DOT_COLORS = {
   'Exhibition':'#f8a524','Art':'#f8a524','Photography':'#f8a524','Painting':'#f8a524',
   'Sculpture':'#f8a524','Installation':'#f8a524','Vernissage/Finissage':'#f8a524','Vernissage':'#f8a524','Finissage':'#f8a524',
-  'Concert':'#2dd4a0','Theater':'#2dd4a0','Dance':'#2dd4a0','Opera':'#2dd4a0','Performance':'#2dd4a0','Film':'#2dd4a0',
+  'Concert':'#2dd4a0','Theater':'#2dd4a0','Dance':'#2dd4a0','Opera':'#2dd4a0','Performance':'#2dd4a0','Film':'#2dd4a0','Musical':'#2dd4a0','Ballet':'#2dd4a0',
   'Literature':'#60a5fa','Talk':'#60a5fa','Poetry':'#60a5fa','Book Club':'#60a5fa','Reading':'#60a5fa',
   'Techno':'#f9d162','Party':'#f9d162','Festival':'#f9d162','Comedy':'#f9d162',
   'Workshop':'#c5447d','Market':'#c5447d','Open Door Day':'#c5447d','Guided Tour':'#c5447d','Food':'#c5447d','Protest':'#c5447d','History':'#c5447d','Parade':'#c5447d',
-  'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Family':'#e8e4a0','Drag':'#e8e4a0','Musical':'#2dd4a0','Ballet':'#2dd4a0',
+  'Queer':'#e8e4a0','Sexuality':'#e8e4a0','Family':'#e8e4a0','Drag':'#e8e4a0',
   'Free':'#4ade80',
   'Indoor':'#6366f1','Outdoor':'#6366f1','Online':'#6366f1',
 };
@@ -899,16 +899,13 @@ function getPopupDots(tags) {
   return all ? '<div class="pill-dots">'+all+'</div>' : '';
 }
 
-// Return array of unique tag-group colors for the pill bar (excl. Free, Indoor/Outdoor, language)
-var PILL_EXCLUDE = new Set(['Free','Indoor','Outdoor','Online',
-  'German','English','French','Spanish','Italian','Polish','Japanese','Korean',
-  'Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish',
-  'Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese',
-  'Language-Free']);
+// Tags excluded from calendar pill colored bars: Free, place-type, and all language tags.
+// Uses ALL_LANG_SET so any language tag Gemini generates is automatically excluded.
+var PILL_EXCLUDE_STATIC = new Set(['Free','Indoor','Outdoor','Online','Open Door Day']);
 function pillColors(tags) {
   var seen = {}, cols = [];
   (tags||[]).forEach(function(t) {
-    if (PILL_EXCLUDE.has(t)) return;
+    if (PILL_EXCLUDE_STATIC.has(t) || ALL_LANG_SET.has(t)) return;
     var col = TAG_DOT_COLORS[t];
     if (col && !seen[col]) { seen[col]=true; cols.push(col); }
   });
@@ -919,11 +916,11 @@ function pillColors(tags) {
 var TAG_CLASS_MAP = {
   'Exhibition':'tg-visual','Art':'tg-visual','Photography':'tg-visual','Painting':'tg-visual',
   'Sculpture':'tg-visual','Installation':'tg-visual','Vernissage/Finissage':'tg-visual','Vernissage':'tg-visual','Finissage':'tg-visual',
-  'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing','Performance':'tg-performing','Film':'tg-performing',
-  'Literature':'tg-words','Talk':'tg-words','Poetry':'tg-words','Book Club':'tg-words',
-  'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife','Drag':'tg-nightlife',
+  'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing','Performance':'tg-performing','Film':'tg-performing','Musical':'tg-performing','Ballet':'tg-performing',
+  'Literature':'tg-words','Talk':'tg-words','Poetry':'tg-words','Book Club':'tg-words','Reading':'tg-words',
+  'Techno':'tg-nightlife','Party':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife',
   'Workshop':'tg-other','Market':'tg-other','Open Door Day':'tg-other','Guided Tour':'tg-other','Food':'tg-other','Protest':'tg-other','History':'tg-other','Parade':'tg-other',
-  'Queer':'tg-community','Sexuality':'tg-community','Family':'tg-community',
+  'Queer':'tg-community','Sexuality':'tg-community','Family':'tg-community','Drag':'tg-community',
   'Free':'tg-free',
   'Indoor':'tg-place','Outdoor':'tg-place','Online':'tg-place',
   'German':'tg-language','English':'tg-language','French':'tg-language','Spanish':'tg-language',
@@ -1636,8 +1633,8 @@ function buildFilters() {
   // TAG_GROUPS is also used outside buildFilters (mobile tag ranking)
   TAG_GROUPS=[
     {label:'Art & Visual',  cls:'tg-visual',     tags:['Exhibition','Art','Photography','Painting','Sculpture','Installation','Vernissage/Finissage']},
-    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera','Film','Musical','Ballet','Cinema']},
-    {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club','literature','Reading']},
+    {label:'Live',          cls:'tg-performing', tags:['Concert','Theater','Dance','Performance','Opera','Film','Musical','Ballet']},
+    {label:'Words',         cls:'tg-words',      tags:['Talk','Literature','Poetry','Book Club','Reading']},
     {label:'Nightlife',     cls:'tg-nightlife',  tags:['Party','Techno','Festival','Comedy']},
     {label:'Events',        cls:'tg-other',      tags:['Workshop','Guided Tour','Market','Food','History','Open Door Day','Protest','Parade']},
     {label:'Community',     cls:'tg-community',  tags:['Queer','Sexuality','Family','Drag']},
@@ -2405,16 +2402,13 @@ function renderAgenda() {
     'Concert':'tg-performing','Theater':'tg-performing','Dance':'tg-performing','Opera':'tg-performing',
     'Performance':'tg-performing','Film':'tg-screen','Cinema':'tg-screen','Musical':'tg-performing','Ballet':'tg-performing',
     'Talk':'tg-words','Literature':'tg-words','Poetry':'tg-words','Book Club':'tg-words','Reading':'tg-words',
-    'Party':'tg-nightlife','Techno':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife','Drag':'tg-nightlife',
+    'Party':'tg-nightlife','Techno':'tg-nightlife','Festival':'tg-nightlife','Comedy':'tg-nightlife',
     'Workshop':'tg-other','Guided Tour':'tg-other','Market':'tg-other','Food':'tg-other',
     'History':'tg-other','Open Door Day':'tg-other','Protest':'tg-other','Parade':'tg-other',
-    'Queer':'tg-community','Sexuality':'tg-community','Family':'tg-community',
+    'Queer':'tg-community','Sexuality':'tg-community','Family':'tg-community','Drag':'tg-community',
   };
-  var SKIP_TAGS = new Set(['Price Unknown','Indoor','Outdoor','Online','Explicit',
-    'German','English','French','Spanish','Italian','Polish','Japanese','Korean',
-    'Arabic','Turkish','Russian','Hebrew','Portuguese','Dutch','Swedish','Danish',
-    'Norwegian','Finnish','Greek','Ukrainian','Romanian','Hungarian','Czech','Chinese',
-    'Language-Free']);
+  var SKIP_TAGS_STATIC = new Set(['Price Unknown','Indoor','Outdoor','Online','Explicit']);
+  function agendaSkipTag(t) { return SKIP_TAGS_STATIC.has(t) || ALL_LANG_SET.has(t); }
 
   var DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2502,7 +2496,7 @@ function renderAgenda() {
 
       // Tags (skip price/language/place tags)
       var visibleTags = (ev.tags || []).filter(function(t) {
-        return !SKIP_TAGS.has(t) && t !== 'Free';
+        return !agendaSkipTag(t) && t !== 'Free';
       }).slice(0, 4);
       if (visibleTags.length > 0) {
         var tagsEl = document.createElement('div');

@@ -849,7 +849,7 @@ function fmtFullDate(iso) {
 // Aggregator / listings domains — sourceUrl pointing to these is NOT the event's own page.
 // Mirrors AGGREGATOR_DOMAINS in 03_CalendarWriter.gs — keep the two lists in sync.
 var AGGREGATOR_DOMAINS = [
-  'siegessaeule.de','tip-berlin.de','the-berliner.com','index-berlin.de',
+  'siegessaeule.de','tip-berlin.de','the-berliner.com','index-berlin.de','indexberlin.com',
   'ra.co','resident-advisor.net','ceecee.cc','we-are-village.com',
   'berlineventsweekly.com','juliaschneider.de','thenextday.substack.com',
   'festival-ticker.de','festival-alarm.com','theleftberlin.com','nordischebotschaften.org',
@@ -953,6 +953,17 @@ function parseDesc(desc) {
     if (l.startsWith('Official:')) out.officialUrl=l.replace('Official:','').trim();
     if (l.startsWith('http')&&!out.sourceUrl) out.sourceUrl=l.trim();
   }
+  // Strip eventUrl/officialUrl that point to our own calendar or are not real external URLs.
+  // This catches hallucinated URLs that may have been written into existing calendar events.
+  var OWN_DOMAINS_FE = ['culturalcalendar.github.io','github.io/events/list','calendar.google.com'];
+  function _isBadUrl(u) {
+    if (!u || !/^https?:\/\//i.test(u) || u.length < 12) return true;
+    var lc = u.toLowerCase();
+    for (var _i = 0; _i < OWN_DOMAINS_FE.length; _i++) { if (lc.indexOf(OWN_DOMAINS_FE[_i]) !== -1) return true; }
+    return false;
+  }
+  if (_isBadUrl(out.eventUrl))   out.eventUrl   = '';
+  if (_isBadUrl(out.officialUrl)) out.officialUrl = '';
   return out;
 }
 

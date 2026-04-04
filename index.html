@@ -564,6 +564,38 @@
 
     /* Day popup full-width */
     #day-popup { max-width: 100%; border-radius: 0; }
+
+    /* Disable hover effects on touch — sticky hover causes wrong colors after tap */
+    @media (hover: none) {
+      .view-btn:hover { color: var(--muted) !important; background: none !important; }
+      .view-btn.active:hover { background: var(--accent) !important; color: #000 !important; }
+      .cal-nav-btn:hover { border-color: var(--border2) !important; color: var(--muted) !important; }
+      .cal-view-btn:hover { color: var(--muted) !important; background: none !important; }
+      .cal-view-btn.cal-view-active:hover { background: var(--surface2) !important; color: var(--text) !important; }
+      .cal-today-btn:hover { border-color: var(--border2) !important; color: var(--muted) !important; }
+      .tag-filter-btn:hover { border-color: var(--border2) !important; color: var(--muted) !important; }
+      .tag-filter-btn.active:hover { background: var(--accent) !important; border-color: var(--accent) !important; color: #000 !important; }
+      .tag-filter-btn.excluded:hover { background: rgba(239,68,68,0.10) !important; border-color: #ef4444 !important; color: #ef4444 !important; }
+      .tag-group-btn:hover { border-color: var(--border2) !important; color: var(--muted2) !important; }
+      .price-btn:hover { border-color: var(--border2) !important; color: var(--muted) !important; }
+      .price-btn.active:hover { border-color: inherit !important; }
+      .venue-filter-trigger:hover { border-color: var(--border) !important; color: var(--text) !important; }
+      .venue-filter-trigger.has-selection:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+      .venue-option:hover { background: none !important; }
+      .venue-dropdown-clear:hover { color: var(--muted) !important; }
+      #clear-btn:hover { border-color: var(--border) !important; color: var(--muted) !important; }
+      .cal-event-pill:hover { background: var(--surface2) !important; color: var(--text) !important; }
+      .cal-event-pill:hover::before { background: var(--border2) !important; }
+      .footer-link:hover { color: var(--muted) !important; }
+      .theme-toggle-track:hover { border-color: var(--border2) !important; }
+      .tag-toggle-track:hover { border-color: var(--border2) !important; }
+      .sfw-toggle-track:hover { border-color: var(--border2) !important; }
+      .not-btn:hover { border-color: var(--border2) !important; color: var(--muted2) !important; }
+      .not-btn.active:hover { background: rgba(239,68,68,0.12) !important; border-color: #ef4444 !important; color: #ef4444 !important; }
+      .event-card:hover { background: var(--surface) !important; }
+      .agenda-event:hover { background: none !important; }
+      .site-title:hover { opacity: 1 !important; }
+    }
   }
 
 </style>
